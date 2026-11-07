@@ -197,7 +197,13 @@ export function useCustomerOrders() {
         { event: '*', schema: 'public', table: 'shop_settings' },
         (payload) => {
           if (payload.new) {
-            setSettings(payload.new as ShopSettings);
+            const updated = payload.new as ShopSettings;
+            setSettings(updated);
+            try {
+              localStorage.setItem('chakki_cached_settings', JSON.stringify(updated));
+            } catch {
+              // Ignore localStorage errors
+            }
           }
         }
       )

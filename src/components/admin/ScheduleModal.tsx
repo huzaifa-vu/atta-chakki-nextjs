@@ -250,7 +250,7 @@ export default function ScheduleModal({
             )}
 
             {/* Scrollable Day-by-Day List */}
-            <div className="overflow-y-auto px-4 sm:px-6 py-4 space-y-3.5 divide-y divide-stone-100">
+            <div className="overflow-y-auto px-4 sm:px-6 py-4 space-y-3">
               {DAYS_ORDER.map((day) => {
                 const daySched = schedule[day] || {
                   isOpen: true,
@@ -264,10 +264,10 @@ export default function ScheduleModal({
                 return (
                   <div
                     key={day}
-                    className={`pt-3.5 first:pt-0 rounded-2xl p-3.5 sm:p-4 transition ${
+                    className={`rounded-2xl p-4 sm:p-5 transition shadow-2xs ${
                       isToday
-                        ? 'bg-amber-50/40 border border-amber-200/80 shadow-2xs'
-                        : 'bg-white border border-stone-150'
+                        ? 'bg-amber-50/40 border border-amber-200/80'
+                        : 'bg-white border border-stone-200/80'
                     }`}
                   >
                     {/* Day Header Row */}
@@ -344,7 +344,7 @@ export default function ScheduleModal({
                         </div>
 
                         {/* Breaks Section with "+ Add Break" Button */}
-                        <div className="pt-2 border-t border-stone-150 space-y-2.5">
+                        <div className="pt-3 border-t border-stone-200/60 space-y-2.5">
                           <div className="flex items-center justify-between">
                             <span className="text-[11px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
                               <Coffee className="w-3.5 h-3.5 text-amber-600" />

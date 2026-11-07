@@ -309,7 +309,16 @@ export default function AdminDashboardPage() {
   const totalBatchWeight = selectedOrders.reduce((sum, o) => sum + Number(o.weight_kg), 0);
 
   const currency = settings?.currency || 'Rs.';
-  const currentRate = settings?.rate_per_kg || 15;
+  const currentRate =
+    settings?.rate_per_kg !== undefined && settings?.rate_per_kg !== null
+      ? Number(settings.rate_per_kg)
+      : null;
+  const displayRate =
+    currentRate !== null
+      ? Number.isInteger(currentRate)
+        ? currentRate.toString()
+        : currentRate.toFixed(2)
+      : null;
   const shopStatus = useShopOperatingStatus(settings);
 
   return (
@@ -351,8 +360,12 @@ export default function AdminDashboardPage() {
                       : `Opens ${shopStatus.formattedNextOpen}`}
                   </span>
                 </span>
-                <span className="hidden sm:inline text-stone-300">•</span>
-                <span className="hidden sm:inline">Rate: {currency} {Number(currentRate).toFixed(0)}/kg</span>
+                {displayRate && (
+                  <>
+                    <span className="hidden sm:inline text-stone-300">•</span>
+                    <span className="hidden sm:inline">Rate: {currency} {displayRate}/kg</span>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -41,7 +41,7 @@ export default function NewOrderModal({
 
   const supabase = createClient();
 
-  const ratePerKg = Number(settings?.rate_per_kg || 15);
+  const ratePerKg = Number(settings?.rate_per_kg || 0);
   const currency = settings?.currency || 'Rs.';
 
   const numWeight = parseFloat(weight) || 0;

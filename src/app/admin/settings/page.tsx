@@ -39,7 +39,7 @@ export default function AdminSettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<ShopSettings | null>(null);
   const [shopName, setShopName] = useState('Chakki Fresh');
-  const [ratePerKg, setRatePerKg] = useState('15');
+  const [ratePerKg, setRatePerKg] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [openingTime, setOpeningTime] = useState('08:00');
   const [closingTime, setClosingTime] = useState('21:00');
@@ -71,7 +71,7 @@ export default function AdminSettingsPage() {
 
         setSettings(parsed);
         setShopName(parsed.shop_name || 'Chakki Fresh');
-        setRatePerKg(parsed.rate_per_kg?.toString() || '15');
+        setRatePerKg(parsed.rate_per_kg != null ? parsed.rate_per_kg.toString() : '');
         setPhoneNumber(parsed.phone_number || '');
         setOpeningTime(defaultOpen);
         setClosingTime(defaultClose);
@@ -104,7 +104,7 @@ export default function AdminSettingsPage() {
 
         setSettings(data as ShopSettings);
         setShopName(data.shop_name || 'Chakki Fresh');
-        setRatePerKg(data.rate_per_kg?.toString() || '15');
+        setRatePerKg(data.rate_per_kg != null ? data.rate_per_kg.toString() : '');
         setPhoneNumber(data.phone_number || '');
         setOpeningTime(defaultOpen);
         setClosingTime(defaultClose);
@@ -410,18 +410,28 @@ export default function AdminSettingsPage() {
                   )}
                 </div>
 
-                {/* Dedicated Clean Modal Trigger */}
+                {/* Dedicated Clean Modal Trigger - Soft Light Redesign */}
                 <button
                   type="button"
                   onClick={() => setIsScheduleModalOpen(true)}
-                  className="w-full py-2.5 px-3.5 rounded-xl bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white font-extrabold text-xs flex items-center justify-between group transition shadow-sm hover:shadow-md cursor-pointer"
+                  className="w-full p-3.5 sm:p-4 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 text-amber-950 transition active:scale-[0.99] flex items-center justify-between group cursor-pointer shadow-2xs"
                 >
-                  <div className="flex items-center gap-2">
-                    <CalendarDays className="w-4 h-4 text-amber-200" />
-                    <span>Customize Weekly Schedule & Breaks</span>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 border border-amber-200/60 flex items-center justify-center shrink-0 shadow-2xs">
+                      <CalendarDays className="w-4 h-4 text-amber-700" />
+                    </div>
+                    <div className="text-left">
+                      <span className="text-xs sm:text-sm font-extrabold text-stone-900 block leading-tight">
+                        Customize Every Day
+                      </span>
+                      <span className="text-[11px] text-stone-500 font-medium block mt-0.5">
+                        Set custom timings & prayer breaks for each day
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[11px] font-bold bg-white/20 px-2 py-0.5 rounded-md flex items-center gap-1 group-hover:bg-white/30 transition">
-                    7 Days & Breaks <Sparkles className="w-3 h-3 text-amber-200" />
+                  <span className="text-xs font-bold text-amber-800 bg-white border border-amber-200/80 px-3 py-1.5 rounded-xl flex items-center gap-1.5 group-hover:bg-amber-50 transition shadow-2xs shrink-0">
+                    <span>Edit Days</span>
+                    <span className="group-hover:translate-x-0.5 transition-transform font-bold">→</span>
                   </span>
                 </button>
               </div>

@@ -128,7 +128,16 @@ export default function CustomerDashboard() {
 
   const currency = settings?.currency || 'Rs.';
   const shopName = settings?.shop_name || 'Chakki Fresh';
-  const currentRate = settings?.rate_per_kg || 15;
+  const currentRate =
+    settings?.rate_per_kg !== undefined && settings?.rate_per_kg !== null
+      ? Number(settings.rate_per_kg)
+      : null;
+  const displayRate =
+    currentRate !== null
+      ? Number.isInteger(currentRate)
+        ? currentRate.toString()
+        : currentRate.toFixed(2)
+      : '—';
 
   const hasActiveOrders = activeOrders.length > 0;
 
@@ -193,7 +202,7 @@ export default function CustomerDashboard() {
             {/* Milling Rate Chip */}
             <div className="px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-stone-700 flex items-center gap-1">
               <span className="text-stone-500 font-medium">Rate:</span>
-              <span className="font-extrabold text-stone-900">{currency} {Number(currentRate).toFixed(0)}/kg</span>
+              <span className="font-extrabold text-stone-900">{currency} {displayRate}/kg</span>
             </div>
 
             {/* Helpline Chip (only if phone added) */}
@@ -476,7 +485,7 @@ export default function CustomerDashboard() {
                 </span>
                 <div className="flex items-baseline gap-1.5 pt-0.5">
                   <span className="text-2xl font-black text-stone-900">
-                    {currency} {Number(currentRate).toFixed(0)}
+                    {currency} {displayRate}
                   </span>
                   <span className="text-xs text-stone-500 font-bold">/ kg</span>
                 </div>
