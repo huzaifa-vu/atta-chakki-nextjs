@@ -7,28 +7,39 @@ import confetti from 'canvas-confetti';
 
 const STORAGE_KEY = 'chakki_customer_order_ids';
 
+// Synchronous helper: extracts IDs from localStorage AND instant URL query (?track= or ?id=)
+function getInitialOrderIds(): string[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const trackId = params.get('track') || params.get('id');
+    const stored = localStorage.getItem(STORAGE_KEY);
+    let ids: string[] = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(ids)) ids = [];
+
+    if (trackId && !ids.includes(trackId)) {
+      ids = [trackId, ...ids];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+    }
+
+    // Clean URL query params silently without causing a re-render or reload
+    if (trackId) {
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+
+    return ids;
+  } catch {
+    return [];
+  }
+}
+
 export function useCustomerOrders() {
-  const [orderIds, setOrderIds] = useState<string[]>([]);
+  const [orderIds, setOrderIds] = useState<string[]>(getInitialOrderIds);
   const [orders, setOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<ShopSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const previousStatusMap = useRef<Record<string, string>>({});
   const supabase = createClient();
-
-  // Load saved order IDs from localStorage
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setOrderIds(parsed);
-        }
-      }
-    } catch (e) {
-      console.error('Failed to parse saved orders', e);
-    }
-  }, []);
 
   // Save order IDs whenever updated
   const saveOrderIds = useCallback((newIds: string[]) => {
@@ -83,57 +94,56 @@ export function useCustomerOrders() {
     }
   }, []);
 
-  // Fetch shop settings
-  const fetchSettings = useCallback(async () => {
-    const { data } = await supabase
-      .from('shop_settings')
-      .select('*')
-      .limit(1)
-      .single();
-    if (data) {
-      setSettings(data);
-    }
-  }, [supabase]);
+  // High-performance parallel fetch for settings and orders
+  const fetchData = useCallback(
+    async (ids: string[]) => {
+      try {
+        const settingsPromise = supabase
+          .from('shop_settings')
+          .select('*')
+          .limit(1)
+          .single();
 
-  // Fetch orders matching orderIds
-  const fetchOrders = useCallback(async (ids: string[]) => {
-    if (ids.length === 0) {
-      setOrders([]);
-      setLoading(false);
-      return;
-    }
+        const ordersPromise =
+          ids.length > 0
+            ? supabase
+                .from('orders')
+                .select('*')
+                .in('id', ids)
+                .order('created_at', { ascending: false })
+            : Promise.resolve({ data: [] as Order[], error: null });
 
-    const { data, error } = await supabase
-      .from('orders')
-      .select('*')
-      .in('id', ids)
-      .order('created_at', { ascending: false });
+        const [settingsRes, ordersRes] = await Promise.all([settingsPromise, ordersPromise]);
 
-    if (!error && data) {
-      // Check if any order transitioned to 'ready'
-      data.forEach((ord: Order) => {
-        const prevStatus = previousStatusMap.current[ord.id];
-        if (prevStatus && prevStatus !== 'ready' && ord.status === 'ready') {
-          triggerCelebration();
+        if (settingsRes.data) {
+          setSettings(settingsRes.data as ShopSettings);
         }
-        previousStatusMap.current[ord.id] = ord.status;
-      });
 
-      setOrders(data);
-    }
-    setLoading(false);
-  }, [supabase, triggerCelebration]);
+        if (ordersRes.data) {
+          ordersRes.data.forEach((ord: Order) => {
+            const prevStatus = previousStatusMap.current[ord.id];
+            if (prevStatus && prevStatus !== 'ready' && ord.status === 'ready') {
+              triggerCelebration();
+            }
+            previousStatusMap.current[ord.id] = ord.status;
+          });
+          setOrders(ordersRes.data as Order[]);
+        }
+      } catch (err) {
+        console.error('Error fetching customer data:', err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [supabase, triggerCelebration]
+  );
 
-  // Initial load
+  // Initial mount & updates when orderIds change
   useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    fetchData(orderIds);
+  }, [orderIds, fetchData]);
 
-  useEffect(() => {
-    fetchOrders(orderIds);
-  }, [orderIds, fetchOrders]);
-
-  // Supabase Realtime Subscription for instant updates
+  // Supabase Realtime Subscription for instant live updates
   useEffect(() => {
     const channel = supabase
       .channel('customer-orders-realtime')
@@ -193,6 +203,6 @@ export function useCustomerOrders() {
     addOrderId,
     removeOrderId,
     saveOrderIds,
-    refetch: () => fetchOrders(orderIds),
+    refetch: () => fetchData(orderIds),
   };
 }

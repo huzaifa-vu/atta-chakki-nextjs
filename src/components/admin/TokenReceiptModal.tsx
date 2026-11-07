@@ -32,7 +32,7 @@ export default function TokenReceiptModal({
   if (!order) return null;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const trackingUrl = `${origin}/track?id=${order.id}&code=${order.access_code || ''}`;
+  const trackingUrl = `${origin}/?track=${order.id}`;
   const currency = settings?.currency || 'Rs.';
   const shopName = settings?.shop_name || 'Chakki Fresh';
 

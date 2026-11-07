@@ -66,11 +66,11 @@ export default function AdminQRScannerModal({
         let orderId = '';
         let code = '';
 
-        if (decodedText.includes('track?') || decodedText.includes('id=')) {
+        if (decodedText.includes('track') || decodedText.includes('id=')) {
           const urlObj = new URL(
             decodedText.startsWith('http') ? decodedText : `https://${decodedText}`
           );
-          orderId = urlObj.searchParams.get('id') || '';
+          orderId = urlObj.searchParams.get('track') || urlObj.searchParams.get('id') || '';
           code = urlObj.searchParams.get('code') || '';
         } else {
           orderId = decodedText.trim();

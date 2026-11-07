@@ -37,7 +37,7 @@ export default function OrderCard({
   const isCompleted = order.status === 'completed';
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  const trackingUrl = `${origin}/track?id=${order.id}&code=${order.access_code || ''}`;
+  const trackingUrl = `${origin}/?track=${order.id}`;
 
   return (
     <motion.div
