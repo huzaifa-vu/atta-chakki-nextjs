@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useCustomerOrders } from '@/lib/hooks/useCustomerOrders';
 import OrderCard from '@/components/customer/OrderCard';
 import CodeLookupModal from '@/components/customer/CodeLookupModal';
@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/types/database';
 import { useShopOperatingStatus, useShopCountdown, formatTime12Hour } from '@/lib/utils/shopHours';
 import { formatPhoneNumber } from '@/lib/utils';
+import { extractOrderInfoFromQR, playSuccessFeedback } from '@/lib/utils/qrUtils';
 import {
   Wheat,
   QrCode,
@@ -18,12 +19,7 @@ import {
   RefreshCw,
   Loader2,
   Plus,
-  Scale,
-  Flame,
-  ShoppingBag,
   CheckCircle2,
-  ShieldCheck,
-  Sparkles,
   Clock,
   ArrowRight,
   AlertCircle,
@@ -31,10 +27,9 @@ import {
   Coffee,
   Phone,
   PhoneCall,
-  Receipt,
-  HelpCircle,
   ChevronRight,
-  Check,
+  Camera,
+  Upload,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -57,10 +52,13 @@ export default function CustomerDashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Inline PIN entry on hero
+  // Inline PIN & QR File Upload
   const [inlinePin, setInlinePin] = useState('');
   const [inlineLoading, setInlineLoading] = useState(false);
   const [inlineError, setInlineError] = useState<string | null>(null);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const supabase = createClient();
   const shopStatus = useShopOperatingStatus(settings);
@@ -74,6 +72,74 @@ export default function CustomerDashboard() {
     }, 4000);
   };
 
+  // Direct QR Image Upload & Decoding
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadLoading(true);
+    setActionError(null);
+    setInlineError(null);
+
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode');
+
+      let container = document.getElementById('qr-file-scanner-temp');
+      if (!container) {
+        container = document.createElement('div');
+        container.id = 'qr-file-scanner-temp';
+        container.style.position = 'absolute';
+        container.style.top = '-9999px';
+        container.style.left = '-9999px';
+        container.style.width = '1px';
+        container.style.height = '1px';
+        container.style.overflow = 'hidden';
+        document.body.appendChild(container);
+      }
+
+      const html5Qr = new Html5Qrcode('qr-file-scanner-temp');
+      const decodedResult = await html5Qr.scanFile(file, true);
+      try {
+        await html5Qr.clear();
+      } catch {
+        // Ignore clear error
+      }
+
+      const { orderId, code } = extractOrderInfoFromQR(decodedResult);
+      let targetOrderId = orderId;
+
+      if (!targetOrderId && code) {
+        const { data } = await supabase
+          .from('orders')
+          .select('id, customer_name')
+          .eq('access_code', code)
+          .neq('status', 'completed')
+          .limit(1)
+          .maybeSingle();
+
+        if (data?.id) {
+          targetOrderId = data.id;
+        }
+      }
+
+      if (targetOrderId) {
+        playSuccessFeedback();
+        addOrderId(targetOrderId);
+        showToast(code ? `✓ Order #${code} tracked from QR photo!` : '✓ Order tracked from QR photo!');
+      } else {
+        setActionError('Could not find an active order in this QR image. Please check your slip.');
+      }
+    } catch (err) {
+      console.error('Image scan error:', err);
+      setActionError('Could not detect a QR code in this image. Please upload a clear photo or enter your PIN.');
+    } finally {
+      setUploadLoading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleInlinePinLookup = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanPin = inlinePin.trim();
@@ -81,6 +147,7 @@ export default function CustomerDashboard() {
 
     setInlineLoading(true);
     setInlineError(null);
+    setActionError(null);
 
     try {
       const { data, error } = await supabase
@@ -260,518 +327,257 @@ export default function CustomerDashboard() {
       </AnimatePresence>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
+      <main className="flex-1 max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 space-y-6">
         {/* Loading Indicator */}
         {loading && (
-          <div className="p-12 text-center bg-white rounded-3xl border border-stone-200 shadow-sm space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-amber-600 mx-auto" />
+          <div className="p-10 text-center bg-white rounded-3xl border border-stone-200/80 shadow-2xs space-y-3">
+            <Loader2 className="w-7 h-7 animate-spin text-amber-600 mx-auto" />
             <p className="text-xs font-semibold text-stone-500">Connecting to live chakki updates...</p>
           </div>
         )}
 
-        {/* State 1: ZERO active orders - ELEVATED MODERN CONSUMER EXPERIENCE */}
-        {!hasActiveOrders && !loading && (
-          <div className="space-y-6 sm:space-y-8">
-            {/* 1. Hero Tracker Card - Clean, Soft & Modern Hub */}
-            <section className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-stone-200/80 shadow-sm relative overflow-hidden">
-              {/* Soft Ambient Warm Glow */}
-              <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
-              <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
+        {/* Hidden File Input for QR Image Upload */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageUpload}
+        />
 
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
-                {/* Left Column: Interactive Tracking Actions (Col 7) */}
-                <div className="lg:col-span-7 space-y-6">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs font-bold text-amber-900 bg-amber-50/90 border border-amber-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
-                        <Wheat className="w-3.5 h-3.5 text-amber-600" />
-                        Live Grinding Tracker
-                      </span>
-                      <span
-                        className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs ${
-                          shopStatus.isOpen
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80'
-                            : 'bg-stone-100 text-stone-600 border border-stone-200/80'
-                        }`}
-                      >
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400'
-                          }`}
-                        />
-                        <span>
-                          {shopStatus.isBreakActive
-                            ? shopStatus.breakLabel || 'Break Time'
-                            : shopStatus.isOpen
-                            ? 'Counter Open'
-                            : 'Counter Closed'}
-                        </span>
-                      </span>
-                    </div>
-
-                    <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-stone-900 tracking-tight leading-[1.18]">
-                      Track Your Fresh Atta{' '}
-                      <span className="text-amber-600">Live & Pure</span>
-                    </h1>
-                    <p className="text-xs sm:text-sm text-stone-500 leading-relaxed max-w-lg font-medium">
-                      Have a printed token slip from our counter? Scan your slip QR code with your phone camera or enter your 4-digit PIN to follow your bag live.
-                    </p>
-                  </div>
-
-                  {/* Primary Action Console */}
-                  <div className="space-y-4">
-                    <button
-                      type="button"
-                      onClick={() => setIsScanModalOpen(true)}
-                      className="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white transition shadow-sm hover:shadow-md shadow-amber-500/20 flex items-center justify-between sm:justify-start gap-4 font-bold cursor-pointer group"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
-                        <QrCode className="w-5 h-5" />
-                      </div>
-                      <div className="text-left">
-                        <span className="block leading-tight font-extrabold text-white text-sm sm:text-base">
-                          Scan Slip QR Code
-                        </span>
-                        <span className="block text-[11px] font-medium text-amber-100 mt-0.5">
-                          Instant camera lookup from your receipt
-                        </span>
-                      </div>
-                      <ArrowRight className="w-5 h-5 text-amber-200 ml-auto hidden sm:block group-hover:translate-x-1 transition" />
-                    </button>
-
-                    {/* Secondary PIN Form */}
-                    <div className="pt-3 border-t border-stone-200/60">
-                      <form
-                        onSubmit={handleInlinePinLookup}
-                        className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-md"
-                      >
-                        <span className="text-xs font-semibold text-stone-600 shrink-0 flex items-center gap-1.5">
-                          <KeyRound className="w-3.5 h-3.5 text-amber-600" />
-                          Or enter 4-digit PIN:
-                        </span>
-                        <div className="relative flex-1">
-                          <input
-                            type="text"
-                            maxLength={4}
-                            value={inlinePin}
-                            onChange={(e) => {
-                              setInlinePin(e.target.value.replace(/[^0-9]/g, ''));
-                              setInlineError(null);
-                            }}
-                            placeholder="e.g. 9457"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 hover:bg-white focus:bg-white border border-stone-200/90 focus:border-amber-500 text-stone-900 placeholder:text-stone-400 font-mono font-bold text-sm tracking-widest text-center focus:outline-none transition shadow-2xs"
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          disabled={inlinePin.length !== 4 || inlineLoading}
-                          className="py-2.5 px-4 rounded-xl font-bold text-xs text-amber-950 bg-amber-100 hover:bg-amber-200/80 active:scale-95 transition border border-amber-200/80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs"
-                        >
-                          {inlineLoading ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-800" />
-                          ) : (
-                            <>
-                              <span>Track PIN</span>
-                              <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
-                            </>
-                          )}
-                        </button>
-                      </form>
-
-                      {inlineError && (
-                        <div className="mt-2.5 inline-flex items-center gap-1.5 text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 px-3 py-1.5 rounded-xl">
-                          <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
-                          <span>{inlineError}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Right Column: Visual Receipt Guide (Col 5) */}
-                <div className="lg:col-span-5">
-                  <div className="bg-stone-50/70 rounded-3xl p-5 sm:p-6 border border-stone-200/70 shadow-2xs space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-stone-200/60">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 border border-amber-200/60 flex items-center justify-center shadow-2xs">
-                          <Receipt className="w-4 h-4 text-amber-700" />
-                        </div>
-                        <div>
-                          <span className="text-xs font-black text-stone-900 block leading-tight">
-                            Counter Slip Guide
-                          </span>
-                          <span className="text-[10px] text-stone-500 font-medium block">
-                            Printed receipt given at bag weighing
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-amber-900 bg-amber-100/70 border border-amber-200/80 px-2.5 py-0.5 rounded-full">
-                        Quick Lookup
-                      </span>
-                    </div>
-
-                    {/* Realistic Slip Mockup */}
-                    <div className="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-2xs space-y-3">
-                      <div className="flex items-center justify-between text-[11px] font-mono pb-2 border-b border-dashed border-stone-200">
-                        <span className="font-bold text-stone-700 flex items-center gap-1">
-                          <Wheat className="w-3.5 h-3.5 text-amber-600" />
-                          {shopName.toUpperCase()}
-                        </span>
-                        <span className="text-[10px] font-semibold text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">
-                          #TOKEN-SLIP
-                        </span>
-                      </div>
-
-                      <div className="p-3 rounded-xl bg-amber-50/40 border border-amber-200/60 flex items-center gap-3.5">
-                        <div className="w-13 h-13 rounded-xl bg-white border border-amber-200/80 p-2 flex items-center justify-center shrink-0 shadow-2xs relative">
-                          <QrCode className="w-full h-full text-stone-800" />
-                          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
-                          </span>
-                        </div>
-                        <div className="space-y-0.5 text-left">
-                          <span className="text-xs font-extrabold text-stone-900 block">
-                            QR Code on Slip
-                          </span>
-                          <p className="text-[11px] text-stone-500 leading-tight font-medium">
-                            Point phone camera to open your live bag tracker in 1 second.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-dashed border-stone-200 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] text-stone-500 font-semibold">
-                            4-Digit PIN:
-                          </span>
-                          <span className="text-xs font-mono font-black text-amber-950 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
-                            9457
-                          </span>
-                        </div>
-                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md">
-                          ✓ No App Needed
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* 3 Steps Mini Timeline */}
-                    <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
-                      <div className="p-2 rounded-xl bg-white border border-stone-200/60 shadow-2xs">
-                        <span className="block text-[11px] font-extrabold text-stone-800">1. Weighed</span>
-                        <span className="block text-[10px] text-stone-400 font-medium">Slip issued</span>
-                      </div>
-                      <div className="p-2 rounded-xl bg-amber-50/60 border border-amber-200/60 shadow-2xs">
-                        <span className="block text-[11px] font-extrabold text-amber-900">2. Milling</span>
-                        <span className="block text-[10px] text-amber-700/80 font-medium">Cold stone</span>
-                      </div>
-                      <div className="p-2 rounded-xl bg-emerald-50/60 border border-emerald-200/60 shadow-2xs">
-                        <span className="block text-[11px] font-extrabold text-emerald-900">3. Pickup</span>
-                        <span className="block text-[10px] text-emerald-700/80 font-medium">Sealed bag</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* 2. Live Chakki Status & Milling Rates Strip - Crisp Modern Cards */}
-            <section
-              className={`grid grid-cols-1 ${
-                hasPhoneNumber ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
-              } gap-3 sm:gap-4`}
-            >
-              {/* Card 1: Milling Rate */}
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1">
-                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Wheat className="w-3.5 h-3.5 text-amber-600" />
-                  Milling Rate
-                </span>
-                <div className="flex items-baseline gap-1.5 pt-0.5">
-                  <span className="text-2xl font-black text-stone-900">
-                    {currency} {displayRate}
-                  </span>
-                  <span className="text-xs text-stone-500 font-bold">/ kg</span>
-                </div>
-                <p className="text-[11px] text-stone-600 font-medium">
-                  100% whole wheat stone grinding
-                </p>
-              </div>
-
-              {/* Card 2: Chakki Status (Visually accurate with live open badge or countdown timer) */}
-              <div
-                className={`rounded-2xl p-4 sm:p-5 border transition shadow-2xs space-y-1.5 ${
-                  shopStatus.isOpen
-                    ? 'bg-gradient-to-br from-emerald-50/50 via-white to-white border-emerald-200'
-                    : 'bg-gradient-to-br from-amber-50/60 via-white to-white border-amber-200'
+        {/* 1. At-A-Glance Dashboard Stat Cards */}
+        <section
+          className={`grid grid-cols-1 ${
+            hasPhoneNumber ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
+          } gap-3 sm:gap-4`}
+        >
+          {/* Card 1: Chakki Status */}
+          <div
+            className={`rounded-2xl p-4 sm:p-5 border transition shadow-2xs space-y-2 ${
+              shopStatus.isOpen
+                ? 'bg-gradient-to-br from-emerald-50/40 via-white to-white border-emerald-200/80'
+                : 'bg-gradient-to-br from-amber-50/50 via-white to-white border-amber-200/80'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span
+                className={`text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
+                  shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
-                      shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'
-                    }`}
-                  >
-                    <span
-                      className={`w-2 h-2 rounded-full ${
-                        shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                      }`}
-                    />
-                    Chakki Status
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                  }`}
+                />
+                Chakki Status
+              </span>
+
+              <span
+                className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                  shopStatus.isOpen
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/80'
+                    : 'bg-amber-100 text-amber-900 border border-amber-300/80'
+                }`}
+              >
+                {shopStatus.isOpen
+                  ? 'Open Now'
+                  : shopStatus.isBreakActive
+                  ? 'Break Time'
+                  : 'Closed'}
+              </span>
+            </div>
+
+            <div className="pt-0.5">
+              {shopStatus.isOpen ? (
+                <div>
+                  <span className="text-lg sm:text-xl font-black text-emerald-950 block leading-tight">
+                    Operational & Milling
                   </span>
-
-                  <span
-                    className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
-                      shopStatus.isOpen
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                        : 'bg-amber-100 text-amber-900 border border-amber-300'
-                    }`}
-                  >
-                    {shopStatus.isOpen
-                      ? 'Open Now'
-                      : shopStatus.isBreakActive
-                      ? 'Break Time'
-                      : 'Closed'}
-                  </span>
+                  <p className="text-[11px] text-emerald-800/80 font-semibold mt-1">
+                    Today: {shopStatus.formattedHours}
+                  </p>
                 </div>
-
-                <div className="pt-0.5">
-                  {shopStatus.isOpen ? (
-                    <div>
-                      <span className="text-lg sm:text-xl font-black text-emerald-950 block leading-tight">
-                        Operational & Milling
-                      </span>
-                      <p className="text-[11px] text-emerald-800/80 font-semibold mt-1">
-                        Today: {shopStatus.formattedHours}
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-xl sm:text-2xl font-black text-amber-950 font-mono tracking-tight">
-                          {countdown.formattedString}
-                        </span>
-                        <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wide">
-                          until open
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-stone-600 font-semibold mt-1 flex items-center gap-1">
-                        <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
-                        <span>Reopens {shopStatus.formattedNextOpen}</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Card 3: Counter Phone Contact (ONLY shown if admin configured phone number) */}
-              {hasPhoneNumber && (
-                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1.5 flex flex-col justify-between hover:border-amber-300 transition group">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <Phone className="w-3.5 h-3.5 text-amber-600" />
-                        Counter Helpline
-                      </span>
-                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md">
-                        Direct Call
-                      </span>
-                    </div>
-
-                    <div className="pt-1">
-                      <a
-                        href={`tel:${settings?.phone_number}`}
-                        className="inline-flex items-center gap-2 text-lg sm:text-xl font-black text-stone-900 group-hover:text-amber-700 transition tracking-tight"
-                      >
-                        <PhoneCall className="w-4 h-4 text-amber-600 shrink-0 group-hover:scale-110 transition" />
-                        <span>{formatPhoneNumber(settings?.phone_number)}</span>
-                      </a>
-                    </div>
+              ) : (
+                <div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl sm:text-2xl font-black text-amber-950 font-mono tracking-tight">
+                      {countdown.formattedString}
+                    </span>
+                    <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wide">
+                      until open
+                    </span>
                   </div>
-
-                  <p className="text-[11px] text-stone-500 font-medium">
-                    Call counter for orders, timings & support
+                  <p className="text-[11px] text-stone-600 font-semibold mt-1 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                    <span>Reopens {shopStatus.formattedNextOpen}</span>
                   </p>
                 </div>
               )}
-            </section>
-
-            {/* 3. "How Live Milling Works" 4-Stage Visual Pipeline */}
-            <section className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-sm space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
-                <div className="space-y-1">
-                  <span className="text-[11px] font-extrabold text-amber-800 uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                    Transparent Process
-                  </span>
-                  <h3 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
-                    How Your Flour is Milled & Tracked
-                  </h3>
-                </div>
-                <p className="text-xs text-stone-500 max-w-sm">
-                  From electronic weighing to slow cold stone grinding, watch every step in real-time.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-gradient-to-b from-stone-50/80 to-white rounded-2xl p-5 border border-stone-200/80 shadow-2xs space-y-3 relative overflow-hidden group hover:border-amber-300 transition">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                      Step 01
-                    </span>
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center font-bold">
-                      <Scale className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-stone-900">Weighed & Logged</h4>
-                    <p className="text-xs text-stone-600 leading-relaxed mt-1">
-                      Wheat is weighed on digital scales. A counter receipt with QR code and 4-digit PIN is assigned to your bag.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-b from-stone-50/80 to-white rounded-2xl p-5 border border-stone-200/80 shadow-2xs space-y-3 relative overflow-hidden group hover:border-amber-300 transition">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                      Step 02
-                    </span>
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center font-bold">
-                      <Flame className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-stone-900">Cold-Stone Milling</h4>
-                    <p className="text-xs text-stone-600 leading-relaxed mt-1">
-                      Heavy traditional chakki stones grind slowly without heat friction to preserve natural bran fiber and germ oils.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-b from-stone-50/80 to-white rounded-2xl p-5 border border-stone-200/80 shadow-2xs space-y-3 relative overflow-hidden group hover:border-amber-300 transition">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black text-amber-800 bg-amber-100 border border-amber-200 px-2.5 py-0.5 rounded-full">
-                      Step 03
-                    </span>
-                    <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center font-bold">
-                      <ShoppingBag className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-stone-900">Sealed & Stored</h4>
-                    <p className="text-xs text-stone-600 leading-relaxed mt-1">
-                      Fresh whole atta is immediately packed and heat-sealed in food-grade packaging ready for collection.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="bg-gradient-to-b from-emerald-50/50 via-white to-white rounded-2xl p-5 border border-emerald-200/80 shadow-2xs space-y-3 relative overflow-hidden group hover:border-emerald-300 transition">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full">
-                      Step 04
-                    </span>
-                    <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-700 flex items-center justify-center font-bold">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <div>
-                    <h4 className="font-extrabold text-sm text-stone-900">Instant Pickup</h4>
-                    <p className="text-xs text-stone-600 leading-relaxed mt-1">
-                      Show your pickup QR code or 4-digit PIN at the counter for instant, queue-free collection.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            {/* 4. Trust Badges - Nutrition & Craft Quality */}
-            <section className="bg-gradient-to-br from-amber-50/40 via-white to-stone-50/50 rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-5">
-              <div className="text-center max-w-lg mx-auto space-y-1">
-                <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-widest">
-                  Why Stone-Ground Chakki Flour?
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black text-stone-900">
-                  Pure Whole Grain. Uncompromised Health.
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-5 bg-white rounded-2xl border border-stone-200/80 shadow-2xs text-center space-y-2.5 hover:border-amber-300 transition">
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shadow-2xs">
-                    <ShieldCheck className="w-6 h-6 text-amber-700" />
-                  </div>
-                  <h5 className="font-black text-sm text-stone-900">100% Whole Wheat</h5>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    Zero maida or industrial bleaching. Every gram contains pure, natural bran, germ, and endosperm.
-                  </p>
-                </div>
-
-                <div className="p-5 bg-white rounded-2xl border border-stone-200/80 shadow-2xs text-center space-y-2.5 hover:border-amber-300 transition">
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shadow-2xs">
-                    <Sparkles className="w-6 h-6 text-amber-700" />
-                  </div>
-                  <h5 className="font-black text-sm text-stone-900">Cold-Milled Nutrients</h5>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    Slow stone friction prevents thermal damage, keeping heat-sensitive Vitamin E and B-complex vitamins alive.
-                  </p>
-                </div>
-
-                <div className="p-5 bg-white rounded-2xl border border-stone-200/80 shadow-2xs text-center space-y-2.5 hover:border-amber-300 transition">
-                  <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center shadow-2xs">
-                    <Clock className="w-6 h-6 text-amber-700" />
-                  </div>
-                  <h5 className="font-black text-sm text-stone-900">Zero Queue Waiting</h5>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    Hand over your wheat, go home, and track everything live. Arrive exactly when your bag is ready.
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* 5. Frequently Asked Questions / Quick Help Guide */}
-            <section className="bg-white rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-5">
-              <div className="flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-amber-600" />
-                <h3 className="text-base sm:text-lg font-black text-stone-900 tracking-tight">
-                  Customer Quick Guide & FAQ
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="p-4 rounded-2xl bg-stone-50/70 border border-stone-200/70 space-y-1.5">
-                  <span className="text-xs font-black text-stone-900 block">
-                    Do I have to wait at the shop?
-                  </span>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    No! Hand in your wheat, take your printed slip, and leave. You can check this live tracker from home on your phone.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-stone-50/70 border border-stone-200/70 space-y-1.5">
-                  <span className="text-xs font-black text-stone-900 block">
-                    Where is my 4-digit PIN?
-                  </span>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    Look near the top of your counter receipt slip. Your 4-digit PIN is printed clearly right under the QR code.
-                  </p>
-                </div>
-
-                <div className="p-4 rounded-2xl bg-stone-50/70 border border-stone-200/70 space-y-1.5">
-                  <span className="text-xs font-black text-stone-900 block">
-                    Can someone else collect my bag?
-                  </span>
-                  <p className="text-xs text-stone-600 leading-relaxed">
-                    Yes! You can share your tracking link or screenshot of the pickup QR code with your family member or driver.
-                  </p>
-                </div>
-              </div>
-            </section>
+            </div>
           </div>
-        )}
 
-        {/* State 2: HAS active orders - Active Tracking Feed */}
-        {hasActiveOrders && (
-          <div className="space-y-6">
+          {/* Card 2: Milling Rate */}
+          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-2xs space-y-2">
+            <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+              <Wheat className="w-3.5 h-3.5 text-amber-600" />
+              Milling Rate
+            </span>
+            <div className="flex items-baseline gap-1.5 pt-0.5">
+              <span className="text-2xl font-black text-stone-900">
+                {currency} {displayRate}
+              </span>
+              <span className="text-xs text-stone-500 font-bold">/ kg</span>
+            </div>
+            <p className="text-[11px] text-stone-600 font-medium">
+              100% whole wheat stone grinding
+            </p>
+          </div>
+
+          {/* Card 3: Counter Phone Contact */}
+          {hasPhoneNumber && (
+            <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-2xs space-y-2 flex flex-col justify-between hover:border-amber-300 transition group">
+              <div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-amber-600" />
+                    Counter Helpline
+                  </span>
+                  <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80 px-2.5 py-0.5 rounded-full">
+                    Direct Call
+                  </span>
+                </div>
+
+                <div className="pt-1.5">
+                  <a
+                    href={`tel:${settings?.phone_number}`}
+                    className="inline-flex items-center gap-2 text-lg sm:text-xl font-black text-stone-900 group-hover:text-amber-700 transition tracking-tight"
+                  >
+                    <PhoneCall className="w-4 h-4 text-amber-600 shrink-0 group-hover:scale-110 transition" />
+                    <span>{formatPhoneNumber(settings?.phone_number)}</span>
+                  </a>
+                </div>
+              </div>
+
+              <p className="text-[11px] text-stone-500 font-medium">
+                Call counter for orders, timings & support
+              </p>
+            </div>
+          )}
+        </section>
+
+        {/* 2. Compact Order Tracking Console */}
+        <section className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/80 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-stone-100">
+            <div>
+              <h2 className="text-base sm:text-lg font-black text-stone-900 tracking-tight flex items-center gap-2">
+                <Wheat className="w-4 h-4 text-amber-600" />
+                Track Your Grinding Order
+              </h2>
+              <p className="text-xs text-stone-500 font-medium mt-0.5">
+                Scan your counter slip QR, upload a photo of your receipt, or enter your 4-digit PIN.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+            {/* 1. Camera Scan */}
+            <div className="md:col-span-4">
+              <button
+                type="button"
+                onClick={() => setIsScanModalOpen(true)}
+                className="w-full p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white transition shadow-sm hover:shadow-md shadow-amber-500/20 flex items-center gap-3 text-left font-bold cursor-pointer group"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
+                  <Camera className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="block text-xs sm:text-sm font-extrabold text-white leading-tight">
+                    Scan Slip QR
+                  </span>
+                  <span className="block text-[11px] font-medium text-amber-100 mt-0.5">
+                    Open camera scanner
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            {/* 2. Upload QR Photo */}
+            <div className="md:col-span-4">
+              <button
+                type="button"
+                disabled={uploadLoading}
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full p-3.5 rounded-2xl bg-amber-50/80 hover:bg-amber-100/90 active:scale-[0.99] border border-amber-200/80 text-amber-950 transition shadow-2xs flex items-center gap-3 text-left font-bold cursor-pointer group disabled:opacity-50"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white border border-amber-200 text-amber-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
+                  {uploadLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
+                  ) : (
+                    <Upload className="w-5 h-5 text-amber-700" />
+                  )}
+                </div>
+                <div>
+                  <span className="block text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">
+                    {uploadLoading ? 'Reading QR...' : 'Upload QR Photo'}
+                  </span>
+                  <span className="block text-[11px] font-medium text-stone-500 mt-0.5">
+                    Select slip from gallery
+                  </span>
+                </div>
+              </button>
+            </div>
+
+            {/* 3. Inline 4-Digit PIN Input Form */}
+            <div className="md:col-span-4">
+              <form
+                onSubmit={handleInlinePinLookup}
+                className="flex items-center gap-2 p-1.5 rounded-2xl bg-stone-50 border border-stone-200/80 focus-within:border-amber-400 focus-within:bg-white transition"
+              >
+                <div className="relative flex-1 pl-2">
+                  <input
+                    type="text"
+                    maxLength={4}
+                    value={inlinePin}
+                    onChange={(e) => {
+                      setInlinePin(e.target.value.replace(/[^0-9]/g, ''));
+                      setInlineError(null);
+                      setActionError(null);
+                    }}
+                    placeholder="PIN: 9457"
+                    className="w-full py-2 bg-transparent text-stone-900 placeholder:text-stone-400 font-mono font-bold text-xs sm:text-sm tracking-widest focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={inlinePin.length !== 4 || inlineLoading}
+                  className="py-2.5 px-3.5 rounded-xl font-bold text-xs text-amber-950 bg-amber-100 hover:bg-amber-200/80 active:scale-95 transition border border-amber-200/80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs"
+                >
+                  {inlineLoading ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-800" />
+                  ) : (
+                    <>
+                      <span>Track</span>
+                      <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Error Message Feedback */}
+          {(inlineError || actionError) && (
+            <div className="flex items-center gap-2 p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{inlineError || actionError}</span>
+            </div>
+          )}
+        </section>
+
+        {/* 3. Active Orders Feed OR Sleek Minimal Empty State */}
+        {hasActiveOrders ? (
+          <div className="space-y-5">
             {/* Header info & Add Bag trigger */}
             <div className="flex items-center justify-between pb-1">
               <div className="flex items-center gap-2">
@@ -792,7 +598,7 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Active Order Card(s) with Settings passed */}
-            <div className="space-y-5">
+            <div className="space-y-4">
               <AnimatePresence>
                 {activeOrders.map((order, idx) => (
                   <OrderCard
@@ -819,6 +625,22 @@ export default function CustomerDashboard() {
               </button>
             </div>
           </div>
+        ) : (
+          !loading && (
+            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-stone-200/80 shadow-2xs text-center space-y-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center mx-auto shadow-2xs">
+                <Wheat className="w-6 h-6 text-amber-600" />
+              </div>
+              <div className="max-w-sm mx-auto space-y-1">
+                <h3 className="text-base font-extrabold text-stone-900">
+                  No Active Orders in Tracking
+                </h3>
+                <p className="text-xs text-stone-500 font-medium leading-relaxed">
+                  Have a counter token? Use the console above to scan your slip, upload a QR photo, or enter your 4-digit PIN.
+                </p>
+              </div>
+            </div>
+          )
         )}
 
         {/* Past Orders Toggle */}
