@@ -46,7 +46,6 @@ export default function OrderCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isCapturing, setIsCapturing] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
   const isReady = order.status === 'ready';
@@ -59,8 +58,6 @@ export default function OrderCard({
 
   const isShopOpen = shopStatus.isOpen;
   const showClosedState = isReady && !isShopOpen;
-  // During image export / share, always present a clean, unblurred, scannable QR ticket
-  const effectiveClosedState = showClosedState && !isCapturing;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const trackingUrl = `${origin}/?track=${order.id}`;
@@ -73,9 +70,23 @@ export default function OrderCard({
   const generateCardBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
 
-    // Temporarily switch off blur, lock medallion, and timer for clean image export
-    setIsCapturing(true);
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    // Direct DOM style overrides to guarantee 100% clean, unblurred, scannable QR in image export
+    const qrElement = cardRef.current.querySelector('[data-qr-wrapper="true"]') as HTMLElement | null;
+    const closedLabel = cardRef.current.querySelector('[data-closed-label="true"]') as HTMLElement | null;
+    const cleanLabel = cardRef.current.querySelector('[data-clean-label="true"]') as HTMLElement | null;
+    const captureHeader = cardRef.current.querySelector('[data-capture-header="true"]') as HTMLElement | null;
+
+    if (qrElement) {
+      qrElement.style.filter = 'none';
+      qrElement.style.setProperty('-webkit-filter', 'none');
+      qrElement.style.opacity = '1';
+    }
+    if (closedLabel) closedLabel.style.display = 'none';
+    if (cleanLabel) cleanLabel.style.display = 'block';
+    if (captureHeader && showClosedState) {
+      captureHeader.classList.remove('hidden');
+      captureHeader.classList.add('flex');
+    }
 
     const options = {
       quality: 0.95,
@@ -107,7 +118,18 @@ export default function OrderCard({
     } catch (fallbackErr) {
       console.error('All image capture methods failed:', fallbackErr);
     } finally {
-      setIsCapturing(false);
+      // Restore live screen presentation immediately
+      if (qrElement && showClosedState) {
+        qrElement.style.filter = '';
+        qrElement.style.removeProperty('-webkit-filter');
+        qrElement.style.opacity = '';
+      }
+      if (closedLabel && showClosedState) closedLabel.style.display = '';
+      if (cleanLabel && showClosedState) cleanLabel.style.display = 'none';
+      if (captureHeader && showClosedState) {
+        captureHeader.classList.add('hidden');
+        captureHeader.classList.remove('flex');
+      }
     }
 
     return resultBlob;
@@ -224,9 +246,12 @@ export default function OrderCard({
       {/* 1. Header Banner for Ready State */}
       {isReady && (
         <>
-          {effectiveClosedState ? (
-            /* Night / Break Closed Header - Clean Stone & Soft Amber */
-            <div className="bg-stone-50 border-b border-stone-200/70 px-5 sm:px-6 py-3 flex items-center justify-between">
+          {/* Night / Break Closed Header (Shown on screen when closed, omitted in capture) */}
+          {showClosedState && (
+            <div
+              data-no-capture="true"
+              className="bg-stone-50 border-b border-stone-200/70 px-5 sm:px-6 py-3 flex items-center justify-between"
+            >
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center shrink-0">
                   {shopStatus.isBreakActive ? (
@@ -245,22 +270,27 @@ export default function OrderCard({
                 {shopStatus.isBreakActive ? 'Break Time' : 'Counter Closed'}
               </span>
             </div>
-          ) : (
-            /* Open / Immediate Pickup Header */
-            <div className="bg-emerald-50 border-b border-emerald-100 px-5 sm:px-6 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-xs sm:text-sm font-bold text-emerald-950">
-                  Flour Ready for Collection!
-                </span>
+          )}
+
+          {/* Clean Ready Header (Always used in exported image or when counter is open) */}
+          <div
+            data-capture-header="true"
+            className={`bg-emerald-50 border-b border-emerald-100 px-5 sm:px-6 py-3 items-center justify-between ${
+              showClosedState ? 'hidden' : 'flex'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                <Sparkles className="w-3.5 h-3.5" />
               </div>
-              <span className="text-[10px] font-bold uppercase tracking-wider bg-white text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-2xs">
-                Counter Ready
+              <span className="text-xs sm:text-sm font-bold text-emerald-950">
+                Flour Ready for Collection!
               </span>
             </div>
-          )}
+            <span className="text-[10px] font-bold uppercase tracking-wider bg-white text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+              Counter Ready
+            </span>
+          </div>
         </>
       )}
 
@@ -332,10 +362,11 @@ export default function OrderCard({
               {/* QR Code Container */}
               <div className="relative p-3 bg-white rounded-2xl shadow-xs border border-stone-200/80 flex items-center justify-center">
                 <div
+                  data-qr-wrapper="true"
                   className={
-                    effectiveClosedState
-                      ? 'filter blur-[1.5px] opacity-60 select-none pointer-events-none transition-all'
-                      : 'transition-all'
+                    showClosedState
+                      ? 'filter blur-[1.5px] opacity-60 select-none pointer-events-none'
+                      : ''
                   }
                 >
                   <QRCodeSVG
@@ -347,7 +378,7 @@ export default function OrderCard({
                 </div>
 
                 {/* Prominent Center Lock Medallion on QR when store is closed (omitted in exported image) */}
-                {effectiveClosedState && (
+                {showClosedState && (
                   <div
                     data-no-capture="true"
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
@@ -361,23 +392,36 @@ export default function OrderCard({
 
               {/* QR Status Label */}
               <div>
-                <span className="text-xs font-bold text-stone-800 flex items-center justify-center gap-1.5">
-                  {effectiveClosedState ? (
-                    <Lock className="w-3.5 h-3.5 text-amber-600" />
-                  ) : (
+                {/* When store is closed on live screen */}
+                {showClosedState && (
+                  <div data-closed-label="true" data-no-capture="true">
+                    <span className="text-xs font-bold text-stone-800 flex items-center justify-center gap-1.5">
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      Pickup QR Code (Locked)
+                    </span>
+                    <p className="text-xs text-stone-500 font-normal mt-0.5">
+                      QR unlocks automatically when chakki counter opens
+                    </p>
+                  </div>
+                )}
+
+                {/* Clean label for exported image OR when store is open */}
+                <div
+                  data-clean-label="true"
+                  className={showClosedState ? 'hidden' : 'block'}
+                >
+                  <span className="text-xs font-bold text-stone-800 flex items-center justify-center gap-1.5">
                     <QrCode className="w-4 h-4 text-emerald-700" />
-                  )}
-                  Pickup QR Code {effectiveClosedState && '(Locked)'}
-                </span>
-                <p className="text-xs text-stone-500 font-normal mt-0.5">
-                  {effectiveClosedState
-                    ? 'QR unlocks automatically when chakki counter opens'
-                    : 'Show this QR at the counter to collect your flour'}
-                </p>
+                    Pickup QR Code
+                  </span>
+                  <p className="text-xs text-stone-500 font-normal mt-0.5">
+                    Show this QR at the counter to collect your flour
+                  </p>
+                </div>
               </div>
 
               {/* Wide Horizontal Countdown Timer Bar (Omitted from exported image) */}
-              {effectiveClosedState && (
+              {showClosedState && (
                 <div
                   data-no-capture="true"
                   className="w-full bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-2xs flex items-center justify-between gap-3 text-left"
