@@ -1,10 +1,12 @@
 'use client';
 
+import { useState, useRef } from 'react';
 import { Order, ShopSettings } from '@/types/database';
 import { formatPrice, formatWeight, formatDate } from '@/lib/utils';
 import { useShopOperatingStatus, useShopCountdown, formatTime12Hour } from '@/lib/utils/shopHours';
 import OrderStepper from './OrderStepper';
 import { QRCodeSVG } from 'qrcode.react';
+import { toBlob, toPng } from 'html-to-image';
 import {
   Sparkles,
   Trash2,
@@ -17,8 +19,11 @@ import {
   Sun,
   Coffee,
   Phone,
+  Share2,
+  Download,
+  Loader2,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface OrderCardProps {
   order: Order;
@@ -37,6 +42,11 @@ export default function OrderCard({
   totalActiveCount = 1,
   onRemove,
 }: OrderCardProps) {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [isSharing, setIsSharing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+
   const isReady = order.status === 'ready';
   const isGrinding = order.status === 'grinding';
   const isQueued = order.status === 'queued';
@@ -51,8 +61,146 @@ export default function OrderCard({
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const trackingUrl = `${origin}/?track=${order.id}`;
 
+  const showLocalFeedback = (msg: string) => {
+    setFeedbackToast(msg);
+    setTimeout(() => setFeedbackToast(null), 3500);
+  };
+
+  const generateCardBlob = async (): Promise<Blob | null> => {
+    if (!cardRef.current) return null;
+
+    const options = {
+      quality: 0.95,
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+      skipFonts: true,
+      cacheBust: true,
+      filter: (node: HTMLElement) => {
+        if (node.getAttribute && node.getAttribute('data-no-capture') === 'true') {
+          return false;
+        }
+        return true;
+      },
+    };
+
+    try {
+      const blob = await toBlob(cardRef.current, options);
+      if (blob) return blob;
+    } catch (err) {
+      console.warn('html-to-image toBlob issue, attempting toPng fallback:', err);
+    }
+
+    try {
+      const dataUrl = await toPng(cardRef.current, options);
+      const res = await fetch(dataUrl);
+      return await res.blob();
+    } catch (fallbackErr) {
+      console.error('All image capture methods failed:', fallbackErr);
+      return null;
+    }
+  };
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  };
+
+  const handleShareCard = async () => {
+    if (!cardRef.current || isSharing || isSaving) return;
+    setIsSharing(true);
+
+    const bagLabel = totalActiveCount > 1 && bagIndex !== undefined ? `-Bag-${bagIndex + 1}` : '';
+    const fileName = `${settings?.shop_name || 'Chakki'}-Pickup-PIN-${order.access_code || 'order'}${bagLabel}.png`.replace(/\s+/g, '-');
+
+    try {
+      const blob = await generateCardBlob();
+      if (!blob) throw new Error('Could not render image');
+
+      const file = new File([blob], fileName, { type: 'image/png' });
+      const shopTitle = settings?.shop_name || 'Chakki Fresh';
+      const shareTitle = `${shopTitle} - Flour Pickup Slip (PIN #${order.access_code})`;
+      const shareText = `🌾 Flour Pickup Slip - ${shopTitle}\n` +
+        `• Customer: ${order.customer_name || 'Whole Wheat Flour'}\n` +
+        `• 4-Digit PIN: ${order.access_code}\n` +
+        `• Weight: ${formatWeight(order.weight_kg)}\n` +
+        `• Amount: ${order.is_paid ? 'Paid' : `Pay on Pickup (${formatPrice(order.total_price, currency)})`}\n\n` +
+        `Show this slip or QR code at the counter to collect the flour bag.`;
+
+      if (
+        typeof navigator !== 'undefined' &&
+        typeof navigator.share === 'function' &&
+        typeof navigator.canShare === 'function' &&
+        navigator.canShare({ files: [file] })
+      ) {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          files: [file],
+        });
+        showLocalFeedback('Pickup slip shared successfully!');
+        return;
+      }
+
+      // Fallback for desktop or non-file share: download image + copy text
+      downloadBlob(blob, fileName);
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        try {
+          await navigator.clipboard.writeText(`${shareText}\n\nLive Link: ${trackingUrl}`);
+          showLocalFeedback('Slip image saved & details copied to clipboard!');
+          return;
+        } catch {
+          // ignore clipboard error
+        }
+      }
+      showLocalFeedback('Pickup slip image saved to device!');
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
+      console.error('Share slip failed:', err);
+      try {
+        const blob = await generateCardBlob();
+        if (blob) {
+          downloadBlob(blob, fileName);
+          showLocalFeedback('Slip image saved to device!');
+        }
+      } catch {
+        showLocalFeedback('Could not save image. You can take a screenshot.');
+      }
+    } finally {
+      setIsSharing(false);
+    }
+  };
+
+  const handleSaveCard = async () => {
+    if (!cardRef.current || isSharing || isSaving) return;
+    setIsSaving(true);
+
+    const bagLabel = totalActiveCount > 1 && bagIndex !== undefined ? `-Bag-${bagIndex + 1}` : '';
+    const fileName = `${settings?.shop_name || 'Chakki'}-Pickup-PIN-${order.access_code || 'order'}${bagLabel}.png`.replace(/\s+/g, '-');
+
+    try {
+      const blob = await generateCardBlob();
+      if (!blob) throw new Error('Could not render image');
+      downloadBlob(blob, fileName);
+      showLocalFeedback('Pickup card image saved to your device!');
+    } catch (err) {
+      console.error('Save card failed:', err);
+      showLocalFeedback('Could not save image. You can take a screenshot.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <motion.div
+      ref={cardRef}
       layout
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
@@ -192,6 +340,7 @@ export default function OrderCard({
 
           {isCompleted && onRemove && (
             <button
+              data-no-capture="true"
               onClick={() => onRemove(order.id)}
               className="p-2 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer"
               title="Remove from history"
@@ -268,6 +417,66 @@ export default function OrderCard({
                 </span>
               </div>
             </div>
+
+            {/* Save & Share Action Console (Excluded from captured image) */}
+            <div data-no-capture="true" className="pt-1 space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {/* Primary: Share Slip Image */}
+                <button
+                  type="button"
+                  onClick={handleShareCard}
+                  disabled={isSharing || isSaving}
+                  className={`w-full py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-xs active:scale-98 cursor-pointer disabled:opacity-60 text-white ${
+                    showClosedState
+                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'
+                      : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                  }`}
+                  title="Share pickup slip image with someone on WhatsApp or other apps"
+                >
+                  {isSharing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Share2 className="w-4 h-4" />
+                  )}
+                  <span>{isSharing ? 'Generating Slip...' : 'Share Slip Image'}</span>
+                </button>
+
+                {/* Secondary: Save Card as Image */}
+                <button
+                  type="button"
+                  onClick={handleSaveCard}
+                  disabled={isSharing || isSaving}
+                  className="w-full py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 active:scale-98 text-stone-800 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition border border-stone-200/90 cursor-pointer disabled:opacity-60"
+                  title="Download card image to phone or computer gallery"
+                >
+                  {isSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-stone-600" />
+                  ) : (
+                    <Download className="w-4 h-4 text-stone-600" />
+                  )}
+                  <span>{isSaving ? 'Saving...' : 'Save Card as Image'}</span>
+                </button>
+              </div>
+
+              <p className="text-[11px] text-stone-500 text-center font-medium leading-relaxed">
+                Sending someone else to collect? Tap <strong className="text-stone-700 font-bold">Share Slip Image</strong> to send this card on WhatsApp.
+              </p>
+
+              {/* In-Card Toast Feedback */}
+              <AnimatePresence>
+                {feedbackToast && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                    className="p-3 rounded-xl bg-stone-900 text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>{feedbackToast}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
         ) : (
           /* Metric Chips for non-ready states */
@@ -305,6 +514,17 @@ export default function OrderCard({
               <Phone className="w-3 h-3 text-amber-600" />
               <span>Questions? Call Counter {settings.phone_number}</span>
             </a>
+          </div>
+        )}
+
+        {/* Official Slip Authenticity Watermark / Footer */}
+        {isReady && (
+          <div className="pt-2 text-center border-t border-stone-100 flex items-center justify-between text-[10px] text-stone-400 font-medium">
+            <span className="flex items-center gap-1">
+              <Wheat className="w-3 h-3 text-amber-500" />
+              {settings?.shop_name || 'Chakki Fresh'} Collection Slip
+            </span>
+            <span className="font-mono text-stone-500 font-bold">PIN: {order.access_code}</span>
           </div>
         )}
       </div>
