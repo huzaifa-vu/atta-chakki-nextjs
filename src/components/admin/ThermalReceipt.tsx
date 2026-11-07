@@ -1,7 +1,7 @@
 'use client';
 
 import { Order, ShopSettings } from '@/types/database';
-import { formatPrice, formatWeight, formatDate } from '@/lib/utils';
+import { formatPrice, formatWeight, formatDate, formatPhoneNumber } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
 
 interface ThermalReceiptProps {
@@ -28,7 +28,7 @@ export default function ThermalReceipt({
       <div className="text-center pb-3 border-b-2 border-dashed border-stone-300">
         <h2 className="text-lg font-black uppercase tracking-tight">{shopName}</h2>
         <p className="text-[11px] text-stone-600 mt-0.5">Fresh Stone Ground Atta</p>
-        {phone && <p className="text-[11px] text-stone-600">Ph: {phone}</p>}
+        {phone && <p className="text-[11px] text-stone-600">Ph: {formatPhoneNumber(phone)}</p>}
         <p className="text-[10px] text-stone-600 mt-1">
           {new Date(order.created_at).toLocaleDateString()} • {formatDate(order.created_at)}
         </p>

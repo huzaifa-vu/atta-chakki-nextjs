@@ -9,6 +9,7 @@ import AddOrderModal from '@/components/customer/AddOrderModal';
 import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/types/database';
 import { useShopOperatingStatus, useShopCountdown, formatTime12Hour } from '@/lib/utils/shopHours';
+import { formatPhoneNumber } from '@/lib/utils';
 import {
   Wheat,
   QrCode,
@@ -213,7 +214,7 @@ export default function CustomerDashboard() {
                 title="Call Counter Helpline"
               >
                 <Phone className="w-3.5 h-3.5 text-amber-600" />
-                <span>{settings?.phone_number}</span>
+                <span>{formatPhoneNumber(settings?.phone_number)}</span>
               </a>
             )}
           </div>
@@ -271,36 +272,36 @@ export default function CustomerDashboard() {
         {/* State 1: ZERO active orders - ELEVATED MODERN CONSUMER EXPERIENCE */}
         {!hasActiveOrders && !loading && (
           <div className="space-y-6 sm:space-y-8">
-            {/* 1. Hero Tracker Card - Modern Dual-Column Hub */}
-            <section className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-stone-200 shadow-xl shadow-stone-200/30 relative overflow-hidden">
-              {/* Subtle Ambient Golden Glow */}
-              <div className="absolute -top-20 -right-20 w-96 h-96 rounded-full bg-gradient-to-br from-amber-200/40 via-amber-100/20 to-transparent blur-3xl pointer-events-none" />
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600" />
+            {/* 1. Hero Tracker Card - Clean, Soft & Modern Hub */}
+            <section className="bg-white rounded-3xl p-6 sm:p-8 lg:p-10 border border-stone-200/80 shadow-sm relative overflow-hidden">
+              {/* Soft Ambient Warm Glow */}
+              <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
+              <div className="absolute -bottom-24 -left-24 w-80 h-80 rounded-full bg-amber-500/5 blur-3xl pointer-events-none" />
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center relative z-10">
                 {/* Left Column: Interactive Tracking Actions (Col 7) */}
                 <div className="lg:col-span-7 space-y-6">
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-[10px] sm:text-xs uppercase tracking-wider font-extrabold text-amber-900 bg-amber-50 px-3 py-1 rounded-full inline-flex items-center gap-1.5 border border-amber-200 shadow-2xs">
+                      <span className="text-xs font-bold text-amber-900 bg-amber-50/90 border border-amber-200/80 px-3 py-1 rounded-full inline-flex items-center gap-1.5 shadow-2xs">
                         <Wheat className="w-3.5 h-3.5 text-amber-600" />
-                        Live Stone-Milling Tracker
+                        Live Grinding Tracker
                       </span>
                       <span
-                        className={`text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${
+                        className={`text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1.5 shadow-2xs ${
                           shopStatus.isOpen
-                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                            : 'bg-amber-50 text-amber-800 border border-amber-200'
+                            ? 'bg-emerald-50 text-emerald-800 border border-emerald-200/80'
+                            : 'bg-stone-100 text-stone-600 border border-stone-200/80'
                         }`}
                       >
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                          className={`w-2 h-2 rounded-full ${
+                            shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400'
                           }`}
                         />
                         <span>
                           {shopStatus.isBreakActive
-                            ? shopStatus.breakLabel || 'Break'
+                            ? shopStatus.breakLabel || 'Break Time'
                             : shopStatus.isOpen
                             ? 'Counter Open'
                             : 'Counter Closed'}
@@ -308,14 +309,12 @@ export default function CustomerDashboard() {
                       </span>
                     </div>
 
-                    <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-stone-900 tracking-tight leading-[1.12]">
+                    <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-stone-900 tracking-tight leading-[1.18]">
                       Track Your Fresh Atta{' '}
-                      <span className="bg-gradient-to-r from-amber-600 via-amber-500 to-amber-600 bg-clip-text text-transparent">
-                        Live & Pure
-                      </span>
+                      <span className="text-amber-600">Live & Pure</span>
                     </h1>
-                    <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-lg">
-                      Received an order slip from our counter? Scan your slip QR code with your phone camera or enter your 4-digit PIN to follow your bag live.
+                    <p className="text-xs sm:text-sm text-stone-500 leading-relaxed max-w-lg font-medium">
+                      Have a printed token slip from our counter? Scan your slip QR code with your phone camera or enter your 4-digit PIN to follow your bag live.
                     </p>
                   </div>
 
@@ -324,16 +323,16 @@ export default function CustomerDashboard() {
                     <button
                       type="button"
                       onClick={() => setIsScanModalOpen(true)}
-                      className="w-full sm:w-auto py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-[0.98] text-white transition shadow-lg shadow-amber-500/25 flex items-center justify-between sm:justify-start gap-4 font-black text-sm sm:text-base cursor-pointer group"
+                      className="w-full sm:w-auto py-3.5 px-5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white transition shadow-sm hover:shadow-md shadow-amber-500/20 flex items-center justify-between sm:justify-start gap-4 font-bold cursor-pointer group"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition">
-                        <QrCode className="w-6 h-6" />
+                      <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
+                        <QrCode className="w-5 h-5" />
                       </div>
                       <div className="text-left">
-                        <span className="block leading-tight font-black text-white">
+                        <span className="block leading-tight font-extrabold text-white text-sm sm:text-base">
                           Scan Slip QR Code
                         </span>
-                        <span className="block text-[11px] font-semibold text-amber-100 mt-0.5">
+                        <span className="block text-[11px] font-medium text-amber-100 mt-0.5">
                           Instant camera lookup from your receipt
                         </span>
                       </div>
@@ -341,12 +340,12 @@ export default function CustomerDashboard() {
                     </button>
 
                     {/* Secondary PIN Form */}
-                    <div className="pt-3 border-t border-stone-200/80">
+                    <div className="pt-3 border-t border-stone-200/60">
                       <form
                         onSubmit={handleInlinePinLookup}
                         className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-md"
                       >
-                        <span className="text-xs font-bold text-stone-600 shrink-0 flex items-center gap-1.5">
+                        <span className="text-xs font-semibold text-stone-600 shrink-0 flex items-center gap-1.5">
                           <KeyRound className="w-3.5 h-3.5 text-amber-600" />
                           Or enter 4-digit PIN:
                         </span>
@@ -360,20 +359,20 @@ export default function CustomerDashboard() {
                               setInlineError(null);
                             }}
                             placeholder="e.g. 9457"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 placeholder:text-stone-400 font-mono font-bold text-sm tracking-widest focus:bg-white focus:border-amber-500 focus:outline-none transition shadow-2xs"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-stone-50 hover:bg-white focus:bg-white border border-stone-200/90 focus:border-amber-500 text-stone-900 placeholder:text-stone-400 font-mono font-bold text-sm tracking-widest text-center focus:outline-none transition shadow-2xs"
                           />
                         </div>
                         <button
                           type="submit"
                           disabled={inlinePin.length !== 4 || inlineLoading}
-                          className="py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-stone-900 hover:bg-stone-800 active:scale-95 transition shadow-xs disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
+                          className="py-2.5 px-4 rounded-xl font-bold text-xs text-amber-950 bg-amber-100 hover:bg-amber-200/80 active:scale-95 transition border border-amber-200/80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center justify-center gap-1.5 shrink-0 shadow-2xs"
                         >
                           {inlineLoading ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-800" />
                           ) : (
                             <>
                               <span>Track PIN</span>
-                              <ChevronRight className="w-3.5 h-3.5" />
+                              <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
                             </>
                           )}
                         </button>
@@ -391,79 +390,84 @@ export default function CustomerDashboard() {
 
                 {/* Right Column: Visual Receipt Guide (Col 5) */}
                 <div className="lg:col-span-5">
-                  <div className="bg-gradient-to-br from-stone-50/90 via-amber-50/30 to-stone-50/90 rounded-2xl p-5 border border-stone-200/90 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-stone-200/70">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold shadow-2xs">
+                  <div className="bg-stone-50/70 rounded-3xl p-5 sm:p-6 border border-stone-200/70 shadow-2xs space-y-4">
+                    <div className="flex items-center justify-between pb-3 border-b border-stone-200/60">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 border border-amber-200/60 flex items-center justify-center shadow-2xs">
                           <Receipt className="w-4 h-4 text-amber-700" />
                         </div>
                         <div>
                           <span className="text-xs font-black text-stone-900 block leading-tight">
-                            Paper Slip Guide
+                            Counter Slip Guide
                           </span>
                           <span className="text-[10px] text-stone-500 font-medium block">
-                            How to find your tracking code
+                            Printed receipt given at bag weighing
                           </span>
                         </div>
                       </div>
-                      <span className="text-[10px] font-extrabold uppercase bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full">
-                        1-Sec Lookup
+                      <span className="text-[10px] font-bold text-amber-900 bg-amber-100/70 border border-amber-200/80 px-2.5 py-0.5 rounded-full">
+                        Quick Lookup
                       </span>
                     </div>
 
                     {/* Realistic Slip Mockup */}
-                    <div className="bg-white rounded-xl p-4 border border-stone-200/80 shadow-2xs space-y-3">
-                      <div className="flex items-center justify-between text-[11px] text-stone-400 font-mono pb-2 border-b border-dashed border-stone-200">
-                        <span>CHAKKI FRESH SLIP</span>
-                        <span>#BAG-RECEIPT</span>
+                    <div className="bg-white rounded-2xl p-4 border border-stone-200/80 shadow-2xs space-y-3">
+                      <div className="flex items-center justify-between text-[11px] font-mono pb-2 border-b border-dashed border-stone-200">
+                        <span className="font-bold text-stone-700 flex items-center gap-1">
+                          <Wheat className="w-3.5 h-3.5 text-amber-600" />
+                          {shopName.toUpperCase()}
+                        </span>
+                        <span className="text-[10px] font-semibold text-stone-400 bg-stone-100 px-1.5 py-0.5 rounded">
+                          #TOKEN-SLIP
+                        </span>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 bg-stone-900 rounded-lg p-1.5 flex items-center justify-center shrink-0 shadow-xs relative">
-                          <QrCode className="w-full h-full text-white" />
-                          <span className="absolute -bottom-1 -right-1 flex h-2.5 w-2.5">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+                      <div className="p-3 rounded-xl bg-amber-50/40 border border-amber-200/60 flex items-center gap-3.5">
+                        <div className="w-13 h-13 rounded-xl bg-white border border-amber-200/80 p-2 flex items-center justify-center shrink-0 shadow-2xs relative">
+                          <QrCode className="w-full h-full text-stone-800" />
+                          <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500" />
                           </span>
                         </div>
                         <div className="space-y-0.5 text-left">
-                          <span className="text-[11px] font-bold text-stone-800 block">
+                          <span className="text-xs font-extrabold text-stone-900 block">
                             QR Code on Slip
                           </span>
-                          <p className="text-[10px] text-stone-500 leading-tight">
-                            Point your camera to jump directly to live bag progress.
+                          <p className="text-[11px] text-stone-500 leading-tight font-medium">
+                            Point phone camera to open your live bag tracker in 1 second.
                           </p>
                         </div>
                       </div>
 
                       <div className="pt-2 border-t border-dashed border-stone-200 flex items-center justify-between">
-                        <div className="space-y-0.5">
-                          <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">
-                            4-Digit PIN
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] text-stone-500 font-semibold">
+                            4-Digit PIN:
                           </span>
-                          <span className="text-xs font-mono font-black text-stone-900 bg-stone-100 px-2 py-0.5 rounded-md border border-stone-200">
-                            PIN: 9457
+                          <span className="text-xs font-mono font-black text-amber-950 bg-amber-50 border border-amber-200 px-2.5 py-0.5 rounded-lg shadow-2xs">
+                            9457
                           </span>
                         </div>
-                        <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md">
-                          No App Required
+                        <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md">
+                          ✓ No App Needed
                         </span>
                       </div>
                     </div>
 
                     {/* 3 Steps Mini Timeline */}
-                    <div className="grid grid-cols-3 gap-1.5 text-center pt-1">
-                      <div className="p-2 rounded-xl bg-white/70 border border-stone-200/60">
-                        <span className="block text-[10px] font-extrabold text-stone-700">1. Weighed</span>
-                        <span className="block text-[9px] text-stone-400">Slip issued</span>
+                    <div className="grid grid-cols-3 gap-2 text-center pt-0.5">
+                      <div className="p-2 rounded-xl bg-white border border-stone-200/60 shadow-2xs">
+                        <span className="block text-[11px] font-extrabold text-stone-800">1. Weighed</span>
+                        <span className="block text-[10px] text-stone-400 font-medium">Slip issued</span>
                       </div>
-                      <div className="p-2 rounded-xl bg-white/70 border border-stone-200/60">
-                        <span className="block text-[10px] font-extrabold text-amber-700">2. Milling</span>
-                        <span className="block text-[9px] text-stone-400">Cold stone</span>
+                      <div className="p-2 rounded-xl bg-amber-50/60 border border-amber-200/60 shadow-2xs">
+                        <span className="block text-[11px] font-extrabold text-amber-900">2. Milling</span>
+                        <span className="block text-[10px] text-amber-700/80 font-medium">Cold stone</span>
                       </div>
-                      <div className="p-2 rounded-xl bg-white/70 border border-stone-200/60">
-                        <span className="block text-[10px] font-extrabold text-emerald-700">3. Pickup</span>
-                        <span className="block text-[9px] text-stone-400">Sealed bag</span>
+                      <div className="p-2 rounded-xl bg-emerald-50/60 border border-emerald-200/60 shadow-2xs">
+                        <span className="block text-[11px] font-extrabold text-emerald-900">3. Pickup</span>
+                        <span className="block text-[10px] text-emerald-700/80 font-medium">Sealed bag</span>
                       </div>
                     </div>
                   </div>
@@ -580,7 +584,7 @@ export default function CustomerDashboard() {
                         className="inline-flex items-center gap-2 text-lg sm:text-xl font-black text-stone-900 group-hover:text-amber-700 transition tracking-tight"
                       >
                         <PhoneCall className="w-4 h-4 text-amber-600 shrink-0 group-hover:scale-110 transition" />
-                        <span>{settings?.phone_number}</span>
+                        <span>{formatPhoneNumber(settings?.phone_number)}</span>
                       </a>
                     </div>
                   </div>

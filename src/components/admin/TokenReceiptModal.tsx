@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Order, ShopSettings } from '@/types/database';
-import { formatPrice, formatWeight } from '@/lib/utils';
+import { formatPrice, formatWeight, formatPhoneNumber } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   X,
@@ -191,7 +191,7 @@ export default function TokenReceiptModal({
               <div className="text-center pb-2 border-b-2 border-dashed border-black">
                 <div className="font-bold text-base uppercase">{shopName}</div>
                 <div>Fresh Stone Ground Atta</div>
-                {settings?.phone_number && <div>Ph: {settings.phone_number}</div>}
+                {settings?.phone_number && <div>Ph: {formatPhoneNumber(settings.phone_number)}</div>}
                 <div className="text-[10px] mt-1">{new Date().toLocaleString()}</div>
               </div>
 

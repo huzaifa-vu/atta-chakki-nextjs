@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { Order, ShopSettings } from '@/types/database';
-import { formatPrice, formatWeight, formatDate } from '@/lib/utils';
+import { formatPrice, formatWeight, formatDate, formatPhoneNumber } from '@/lib/utils';
 import { useShopOperatingStatus, useShopCountdown, formatTime12Hour } from '@/lib/utils/shopHours';
 import OrderStepper from './OrderStepper';
 import { QRCodeSVG } from 'qrcode.react';
@@ -512,7 +512,7 @@ export default function OrderCard({
               className="inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-600 hover:text-amber-700 transition"
             >
               <Phone className="w-3 h-3 text-amber-600" />
-              <span>Questions? Call Counter {settings.phone_number}</span>
+              <span>Questions? Call Counter {formatPhoneNumber(settings.phone_number)}</span>
             </a>
           </div>
         )}
