@@ -270,8 +270,8 @@ export default function AdminDashboardPage() {
   };
 
   const handleAutoCompletedFromQR = (completedOrd: Order) => {
-    setToastMessage(`Order for ${completedOrd.customer_name || 'Customer'} marked Completed & Handed Over!`);
-    setTimeout(() => setToastMessage(null), 4000);
+    setToastMessage(`✓ Pickup verified! Order for ${completedOrd.customer_name || 'Customer'} marked Completed & Handed Over!`);
+    setTimeout(() => setToastMessage(null), 4500);
   };
 
   const queuedOrders = orders.filter((o) => o.status === 'queued');

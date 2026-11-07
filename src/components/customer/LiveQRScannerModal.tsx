@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Html5Qrcode } from 'html5-qrcode';
+import { createClient } from '@/lib/supabase/client';
+import { extractOrderInfoFromQR, playSuccessFeedback } from '@/lib/utils/qrUtils';
 import {
   X,
   Camera,
@@ -30,12 +32,15 @@ export default function LiveQRScannerModal({
   const [scannerActive, setScannerActive] = useState(false);
   const [permissionDenied, setPermissionDenied] = useState(false);
   const [scannedResult, setScannedResult] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loadingCamera, setLoadingCamera] = useState(false);
   const [cameras, setCameras] = useState<{ id: string; label: string }[]>([]);
   const [selectedCameraId, setSelectedCameraId] = useState<string | null>(null);
 
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const autoCloseTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const supabase = createClient();
 
   // Stop active scanner safely
   const stopScanner = useCallback(async () => {
@@ -55,90 +60,112 @@ export default function LiveQRScannerModal({
   const handleDecodedText = useCallback(
     async (decodedText: string) => {
       if (scannedResult) return;
-      setScannedResult(decodedText);
+      setErrorMessage(null);
 
+      // Stop camera feed immediately
       await stopScanner();
 
       try {
-        let orderId = '';
-        let code = '';
+        const { orderId, code } = extractOrderInfoFromQR(decodedText);
+        let finalOrderId = orderId;
 
-        if (decodedText.includes('track?') || decodedText.includes('id=')) {
-          const urlObj = new URL(
-            decodedText.startsWith('http') ? decodedText : `https://${decodedText}`
-          );
-          orderId = urlObj.searchParams.get('id') || '';
-          code = urlObj.searchParams.get('code') || '';
-        } else {
-          orderId = decodedText.trim();
+        // If code only, look up active order
+        if (!finalOrderId && code) {
+          const { data } = await supabase
+            .from('orders')
+            .select('id, customer_name')
+            .eq('access_code', code)
+            .neq('status', 'completed')
+            .limit(1)
+            .maybeSingle();
+
+          if (data?.id) {
+            finalOrderId = data.id;
+          }
         }
 
-        if (orderId) {
-          setTimeout(() => {
-            onScanSuccess(orderId, code);
+        if (finalOrderId) {
+          // Play instant chime & vibration
+          playSuccessFeedback();
+          setScannedResult(finalOrderId);
+
+          // Snappy 800ms auto-close confirmation window
+          if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
+          autoCloseTimerRef.current = setTimeout(() => {
+            onScanSuccess(finalOrderId, code || undefined);
             onClose();
           }, 800);
         } else {
+          setErrorMessage(
+            'Could not find an active order from this QR code. Please check your slip or enter your 4-digit PIN.'
+          );
           setScannedResult(null);
         }
-      } catch {
+      } catch (err) {
+        console.error('Error processing QR text:', err);
+        setErrorMessage('Failed to read QR code. Please try again.');
         setScannedResult(null);
       }
     },
-    [scannedResult, stopScanner, onScanSuccess, onClose]
+    [scannedResult, stopScanner, supabase, onScanSuccess, onClose]
   );
 
   // Start the scanner
-  const startScanner = useCallback(async (cameraIdToUse?: string) => {
-    setLoadingCamera(true);
-    setPermissionDenied(false);
+  const startScanner = useCallback(
+    async (cameraIdToUse?: string) => {
+      setLoadingCamera(true);
+      setPermissionDenied(false);
+      setErrorMessage(null);
+      setScannedResult(null);
 
-    try {
-      if (scannerRef.current && scannerRef.current.isScanning) {
-        await scannerRef.current.stop();
-      }
-
-      const html5Qr = new Html5Qrcode('live-qr-reader');
-      scannerRef.current = html5Qr;
-
-      let targetCameraId = cameraIdToUse;
-      if (!targetCameraId) {
-        const availableDevices = await Html5Qrcode.getCameras().catch(() => []);
-        if (!availableDevices || availableDevices.length === 0) {
-          setPermissionDenied(true);
-          setLoadingCamera(false);
-          return;
+      try {
+        if (scannerRef.current && scannerRef.current.isScanning) {
+          await scannerRef.current.stop();
         }
-        setCameras(availableDevices);
-        const backCamera = availableDevices.find((c) =>
-          c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment')
+
+        const html5Qr = new Html5Qrcode('live-qr-reader');
+        scannerRef.current = html5Qr;
+
+        let targetCameraId = cameraIdToUse;
+        if (!targetCameraId) {
+          const availableDevices = await Html5Qrcode.getCameras().catch(() => []);
+          if (!availableDevices || availableDevices.length === 0) {
+            setPermissionDenied(true);
+            setLoadingCamera(false);
+            return;
+          }
+          setCameras(availableDevices);
+          const backCamera = availableDevices.find((c) =>
+            c.label.toLowerCase().includes('back') || c.label.toLowerCase().includes('environment')
+          );
+          targetCameraId = backCamera ? backCamera.id : availableDevices[0].id;
+          setSelectedCameraId(targetCameraId);
+        }
+
+        await html5Qr.start(
+          targetCameraId,
+          {
+            fps: 10,
+            qrbox: { width: 220, height: 220 },
+            aspectRatio: 1.0,
+          },
+          (decodedText) => {
+            handleDecodedText(decodedText);
+          },
+          () => {}
         );
-        targetCameraId = backCamera ? backCamera.id : availableDevices[0].id;
-        setSelectedCameraId(targetCameraId);
+
+        setScannerActive(true);
+      } catch (err: unknown) {
+        console.warn('Camera access issue:', err);
+        setPermissionDenied(true);
+        setScannerActive(false);
+      } finally {
+        setLoadingCamera(false);
       }
-
-      await html5Qr.start(
-        targetCameraId,
-        {
-          fps: 10,
-          qrbox: { width: 220, height: 220 },
-          aspectRatio: 1.0,
-        },
-        (decodedText) => {
-          handleDecodedText(decodedText);
-        },
-        () => {}
-      );
-
-      setScannerActive(true);
-    } catch (err: unknown) {
-      console.warn('Camera access issue:', err);
-      setPermissionDenied(true);
-      setScannerActive(false);
-    } finally {
-      setLoadingCamera(false);
-    }
-  }, [handleDecodedText]);
+    },
+    [handleDecodedText]
+  );
 
   // Handle file scan fallback
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -153,6 +180,7 @@ export default function LiveQRScannerModal({
       handleDecodedText(decodedResult);
     } catch (err) {
       console.error(err);
+      setErrorMessage('Could not find a QR code in the uploaded image.');
     } finally {
       setLoadingCamera(false);
     }
@@ -161,6 +189,7 @@ export default function LiveQRScannerModal({
   useEffect(() => {
     if (isOpen) {
       setScannedResult(null);
+      setErrorMessage(null);
       setPermissionDenied(false);
       const timer = setTimeout(() => {
         startScanner();
@@ -168,11 +197,13 @@ export default function LiveQRScannerModal({
       return () => clearTimeout(timer);
     } else {
       stopScanner();
+      if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
     }
   }, [isOpen, startScanner, stopScanner]);
 
   useEffect(() => {
     return () => {
+      if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
       if (scannerRef.current && scannerRef.current.isScanning) {
         scannerRef.current.stop().catch(() => {});
       }
@@ -195,16 +226,20 @@ export default function LiveQRScannerModal({
                 <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-700 flex items-center justify-center">
                   <Camera className="w-4 h-4" />
                 </div>
-                <h3 className="font-extrabold text-stone-900 text-sm">
-                  Scan Order QR
-                </h3>
+                <div>
+                  <h3 className="font-extrabold text-stone-900 text-sm">
+                    Scan Order QR
+                  </h3>
+                  <p className="text-[10px] text-stone-500">Auto-tracks and closes</p>
+                </div>
               </div>
               <button
                 onClick={() => {
+                  if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
                   stopScanner();
                   onClose();
                 }}
-                className="p-1.5 text-stone-400 hover:text-stone-700 rounded-full hover:bg-stone-100 transition"
+                className="p-1.5 text-stone-400 hover:text-stone-700 rounded-full hover:bg-stone-100 transition cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -275,15 +310,34 @@ export default function LiveQRScannerModal({
                   )}
 
                   {scannedResult && (
-                    <div className="absolute inset-0 bg-emerald-950/90 flex flex-col items-center justify-center text-white gap-2 z-20">
-                      <CheckCircle2 className="w-12 h-12 text-emerald-400 animate-bounce" />
+                    <div className="absolute inset-0 bg-emerald-950/95 flex flex-col items-center justify-center text-white gap-2 z-20">
+                      <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center animate-pulse">
+                        <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+                      </div>
                       <span className="text-sm font-bold">QR Verified!</span>
+                      <span className="text-xs text-emerald-200">Adding bag to tracking...</span>
                     </div>
                   )}
                 </div>
               )}
 
-              {!permissionDenied && (
+              {errorMessage && (
+                <div className="p-3.5 bg-rose-50 text-rose-800 text-xs rounded-xl border border-rose-200/80 space-y-2 text-left">
+                  <p className="font-semibold">{errorMessage}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setErrorMessage(null);
+                      startScanner();
+                    }}
+                    className="w-full py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg transition text-center cursor-pointer"
+                  >
+                    Scan Again
+                  </button>
+                </div>
+              )}
+
+              {!permissionDenied && !scannedResult && (
                 <p className="text-xs text-stone-500">
                   Point camera at the QR code on your slip
                 </p>
@@ -327,6 +381,7 @@ export default function LiveQRScannerModal({
                 <button
                   type="button"
                   onClick={() => {
+                    if (autoCloseTimerRef.current) clearTimeout(autoCloseTimerRef.current);
                     stopScanner();
                     onClose();
                     onOpenCodeInput();

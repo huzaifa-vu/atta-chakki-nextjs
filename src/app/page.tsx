@@ -45,6 +45,7 @@ export default function CustomerDashboard() {
   const [isAddBagModalOpen, setIsAddBagModalOpen] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Inline PIN entry on hero
   const [inlinePin, setInlinePin] = useState('');
@@ -52,6 +53,13 @@ export default function CustomerDashboard() {
   const [inlineError, setInlineError] = useState<string | null>(null);
 
   const supabase = createClient();
+
+  const showToast = (message: string) => {
+    setToastMessage(message);
+    setTimeout(() => {
+      setToastMessage(null);
+    }, 4000);
+  };
 
   const handleInlinePinLookup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,6 +86,7 @@ export default function CustomerDashboard() {
 
       addOrderId(data[0].id);
       setInlinePin('');
+      showToast(`✓ Order for ${data[0].customer_name || 'Customer'} (PIN #${cleanPin}) tracked live!`);
     } catch {
       setInlineError('Connection issue. Please verify code and try again.');
     } finally {
@@ -87,10 +96,16 @@ export default function CustomerDashboard() {
 
   const handleManualOrderFound = (order: Order) => {
     addOrderId(order.id);
+    showToast(`✓ Order for ${order.customer_name || 'Customer'} tracked live!`);
   };
 
-  const handleScanSuccess = (orderId: string) => {
+  const handleScanSuccess = (orderId: string, code?: string) => {
     addOrderId(orderId);
+    showToast(
+      code
+        ? `✓ Order #${code} tracked live!`
+        : `✓ QR code scanned! Bag added to live tracking.`
+    );
   };
 
   const handleManualRefresh = async () => {
@@ -138,6 +153,21 @@ export default function CustomerDashboard() {
           </div>
         </div>
       </header>
+
+      {/* Floating Action Confirmation Toast */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            className="fixed top-18 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 backdrop-blur-md text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-full shadow-2xl flex items-center gap-2 border border-stone-700/80 pointer-events-none"
+          >
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Container */}
       <main className="flex-1 max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6">
