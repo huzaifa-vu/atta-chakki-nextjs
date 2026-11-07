@@ -22,6 +22,7 @@ import {
   Share2,
   Download,
   Loader2,
+  Lock,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -260,42 +261,6 @@ export default function OrderCard({
       )}
 
       <div className="p-5 sm:p-7 space-y-4">
-        {/* Closed Night / Break Alert: Countdown Timer & Opening Notice */}
-        {showClosedState && (
-          <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-amber-950 text-xs font-bold">
-                {shopStatus.isBreakActive ? (
-                  <Coffee className="w-4 h-4 text-amber-600" />
-                ) : (
-                  <Clock className="w-4 h-4 text-amber-600" />
-                )}
-                <span>
-                  {shopStatus.isBreakActive
-                    ? `${shopStatus.breakLabel || 'Break'} Ends In`
-                    : 'Chakki Counter Opens In'}
-                </span>
-              </div>
-              <span className="text-[11px] font-semibold text-amber-900">
-                {shopStatus.formattedNextOpen}
-              </span>
-            </div>
-
-            {/* Countdown Digits */}
-            <div className="text-center py-2 bg-white rounded-xl border border-amber-200/70 shadow-2xs">
-              <span className="font-mono text-2xl sm:text-3xl font-black text-amber-950 tracking-wider">
-                {countdown.formattedString}
-              </span>
-            </div>
-
-            <p className="text-[11px] text-stone-600 leading-relaxed text-center">
-              {shopStatus.isBreakActive
-                ? `Our counter is currently observing ${shopStatus.breakLabel || 'prayer / lunch break'}. Service and pickup resume promptly at ${formatTime12Hour(shopStatus.breakEnd)}.`
-                : 'Your wheat has been freshly stone-milled and packed in a sealed bag. Please visit the counter when doors open to collect it.'}
-            </p>
-          </div>
-        )}
-
         {/* Customer Info & PIN Row */}
         <div className="flex items-start justify-between gap-3">
           <div className="space-y-1">
@@ -366,13 +331,39 @@ export default function OrderCard({
                   : 'bg-emerald-50/70 border-emerald-300/80'
               }`}
             >
-              <div className="p-3 bg-white rounded-2xl shadow-sm border border-stone-200">
-                <QRCodeSVG
-                  value={trackingUrl}
-                  size={140}
-                  level="M"
-                  includeMargin={false}
-                />
+              <div className="relative p-3.5 bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden flex items-center justify-center min-w-[160px] min-h-[160px]">
+                <div
+                  className={
+                    showClosedState
+                      ? 'filter blur-[5px] opacity-25 select-none pointer-events-none transition-all'
+                      : 'transition-all'
+                  }
+                >
+                  <QRCodeSVG
+                    value={trackingUrl}
+                    size={146}
+                    level="M"
+                    includeMargin={false}
+                  />
+                </div>
+
+                {/* Locked Timer Overlay when store is closed / on break */}
+                {showClosedState && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-white/75 backdrop-blur-[1.5px]">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 border border-amber-200/90 flex items-center justify-center shadow-2xs mb-1.5">
+                      <Lock className="w-4 h-4 text-amber-700" />
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full mb-1">
+                      {shopStatus.isBreakActive ? 'Break Time' : 'Pickup Locked'}
+                    </span>
+                    <span className="font-mono text-base sm:text-lg font-black text-amber-950 tracking-wider">
+                      {countdown.formattedString}
+                    </span>
+                    <span className="text-[10px] text-stone-500 font-semibold mt-0.5">
+                      Opens {shopStatus.formattedNextOpen}
+                    </span>
+                  </div>
+                )}
               </div>
 
               <div>
@@ -381,8 +372,12 @@ export default function OrderCard({
                     showClosedState ? 'text-amber-950' : 'text-emerald-950'
                   }`}
                 >
-                  <QrCode className="w-4 h-4" />
-                  Pickup QR Code
+                  {showClosedState ? (
+                    <Lock className="w-4 h-4 text-amber-700" />
+                  ) : (
+                    <QrCode className="w-4 h-4" />
+                  )}
+                  Pickup QR Code {showClosedState && '(Locked)'}
                 </span>
                 <p
                   className={`text-[11px] font-medium mt-0.5 ${
@@ -390,7 +385,7 @@ export default function OrderCard({
                   }`}
                 >
                   {showClosedState
-                    ? `Keep this QR ready for pickup when counter opens`
+                    ? 'Chakki is currently closed • QR unlocks when doors open'
                     : 'Show this QR at the counter to collect your flour'}
                 </p>
               </div>
