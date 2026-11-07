@@ -10,13 +10,15 @@ import {
   AlertCircle,
   Save,
   RotateCcw,
-  Sparkles,
   CalendarDays,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import {
   WeeklySchedule,
   DayOfWeek,
   DaySchedule,
+  DayBreak,
 } from '@/types/database';
 import {
   DAYS_ORDER,
@@ -24,6 +26,7 @@ import {
   DEFAULT_WEEKLY_SCHEDULE,
   DAY_INDEX_MAP,
   formatTime12Hour,
+  getDayBreaks,
 } from '@/lib/utils/shopHours';
 
 interface ScheduleModalProps {
@@ -33,31 +36,43 @@ interface ScheduleModalProps {
   onSave: (updatedSchedule: WeeklySchedule) => Promise<void>;
 }
 
+function normalizeScheduleWithBreaks(sched?: WeeklySchedule | null): WeeklySchedule {
+  const base: WeeklySchedule = sched
+    ? JSON.parse(JSON.stringify(sched))
+    : JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE));
+
+  DAYS_ORDER.forEach((day) => {
+    if (!base[day]) {
+      base[day] = { isOpen: true, open: '08:00', close: '21:00', breaks: [] };
+    }
+    const d = base[day];
+    d.breaks = getDayBreaks(d);
+    // remove legacy single break object to prevent ambiguity
+    delete d.break;
+  });
+
+  return base;
+}
+
 export default function ScheduleModal({
   isOpen,
   onClose,
   initialSchedule,
   onSave,
 }: ScheduleModalProps) {
-  // Deep clone initial schedule or fall back to default
-  const [schedule, setSchedule] = useState<WeeklySchedule>(() => {
-    return initialSchedule
-      ? JSON.parse(JSON.stringify(initialSchedule))
-      : JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE));
-  });
-
+  const [schedule, setSchedule] = useState<WeeklySchedule>(() =>
+    normalizeScheduleWithBreaks(initialSchedule)
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Sync state if initialSchedule changes when opened
-  const handleOpenReset = () => {
-    setSchedule(
-      initialSchedule
-        ? JSON.parse(JSON.stringify(initialSchedule))
-        : JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE))
-    );
-    setError(null);
-  };
+  // Sync state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setSchedule(normalizeScheduleWithBreaks(initialSchedule));
+      setError(null);
+    }
+  }, [isOpen, initialSchedule]);
 
   const updateDay = (day: DayOfWeek, patch: Partial<DaySchedule>) => {
     setSchedule((prev) => ({
@@ -82,107 +97,77 @@ export default function ScheduleModal({
     });
   };
 
-  const toggleBreak = (day: DayOfWeek) => {
+  // Add a new break for a specific day
+  const addBreak = (day: DayOfWeek) => {
     setSchedule((prev) => {
-      const current = prev[day];
-      const breakObj = current.break || {
-        enabled: false,
+      const current = prev[day] || { isOpen: true, open: '08:00', close: '21:00', breaks: [] };
+      const currentBreaks = Array.isArray(current.breaks) ? [...current.breaks] : [];
+
+      const newBreak: DayBreak = {
+        id: `brk-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        label: day === 'friday' && currentBreaks.length === 0 ? 'Jummah Prayer Break' : '',
         start: '13:00',
-        end: '14:30',
-        label: day === 'friday' ? 'Jummah Prayer Break' : 'Lunch Break',
+        end: day === 'friday' && currentBreaks.length === 0 ? '14:30' : '14:00',
       };
+
       return {
         ...prev,
         [day]: {
           ...current,
-          break: {
-            ...breakObj,
-            enabled: !breakObj.enabled,
-          },
+          breaks: [...currentBreaks, newBreak],
         },
       };
     });
   };
 
-  const updateBreakField = (
+  // Remove a break by index for a specific day
+  const removeBreak = (day: DayOfWeek, breakIndex: number) => {
+    setSchedule((prev) => {
+      const current = prev[day];
+      if (!current || !Array.isArray(current.breaks)) return prev;
+      const updatedBreaks = current.breaks.filter((_, idx) => idx !== breakIndex);
+      return {
+        ...prev,
+        [day]: {
+          ...current,
+          breaks: updatedBreaks,
+        },
+      };
+    });
+  };
+
+  // Update a break field
+  const updateBreak = (
     day: DayOfWeek,
-    field: 'start' | 'end' | 'label',
-    value: string
+    breakIndex: number,
+    patch: Partial<DayBreak>
   ) => {
     setSchedule((prev) => {
       const current = prev[day];
-      const breakObj = current.break || {
-        enabled: true,
-        start: '13:00',
-        end: '14:30',
-        label: 'Lunch Break',
-      };
+      if (!current || !Array.isArray(current.breaks)) return prev;
+      const updatedBreaks = current.breaks.map((b, idx) => {
+        if (idx === breakIndex) {
+          return { ...b, ...patch };
+        }
+        return b;
+      });
       return {
         ...prev,
         [day]: {
           ...current,
-          break: {
-            ...breakObj,
-            [field]: value,
-          },
+          breaks: updatedBreaks,
         },
       };
     });
-  };
-
-  // Quick Action 1: Standard 8am - 9pm every day
-  const applyStandardAllDays = () => {
-    setSchedule((prev) => {
-      const next = { ...prev };
-      DAYS_ORDER.forEach((day) => {
-        next[day] = {
-          ...next[day],
-          isOpen: true,
-          open: '08:00',
-          close: '21:00',
-        };
-      });
-      return next;
-    });
-  };
-
-  // Quick Action 2: Ensure Friday Jummah break is active
-  const applyFridayJummah = () => {
-    setSchedule((prev) => ({
-      ...prev,
-      friday: {
-        ...prev.friday,
-        isOpen: true,
-        open: prev.friday?.open || '08:00',
-        close: prev.friday?.close || '21:00',
-        break: {
-          enabled: true,
-          start: '13:00',
-          end: '14:30',
-          label: 'Jummah Prayer Break',
-        },
-      },
-    }));
-  };
-
-  // Quick Action 3: Copy Monday schedule to Tuesday through Thursday
-  const copyMondayToWeekdays = () => {
-    const mondaySched = schedule.monday;
-    setSchedule((prev) => ({
-      ...prev,
-      tuesday: JSON.parse(JSON.stringify(mondaySched)),
-      wednesday: JSON.parse(JSON.stringify(mondaySched)),
-      thursday: JSON.parse(JSON.stringify(mondaySched)),
-    }));
   };
 
   // Reset to system defaults
   const resetToDefaults = () => {
-    setSchedule(JSON.parse(JSON.stringify(DEFAULT_WEEKLY_SCHEDULE)));
+    setSchedule(normalizeScheduleWithBreaks(DEFAULT_WEEKLY_SCHEDULE));
   };
 
   const handleSave = async () => {
-    // Basic validation
+    // Validate each open day
     for (const day of DAYS_ORDER) {
       const s = schedule[day];
       if (s?.isOpen) {
@@ -190,10 +175,13 @@ export default function ScheduleModal({
           setError(`Please provide opening and closing times for ${DAY_DISPLAY_NAMES[day]}`);
           return;
         }
-        if (s.break?.enabled) {
-          if (!s.break.start || !s.break.end) {
-            setError(`Please set break start and end times for ${DAY_DISPLAY_NAMES[day]}`);
-            return;
+        if (Array.isArray(s.breaks)) {
+          for (let i = 0; i < s.breaks.length; i++) {
+            const b = s.breaks[i];
+            if (!b.start || !b.end) {
+              setError(`Please set start and end times for all breaks on ${DAY_DISPLAY_NAMES[day]}`);
+              return;
+            }
           }
         }
       }
@@ -240,7 +228,7 @@ export default function ScheduleModal({
                     Weekly Schedule & Breaks
                   </h3>
                   <p className="text-xs text-stone-500">
-                    Set operating hours and mid-day prayer/lunch breaks for each day.
+                    Set operating hours and add custom mid-day prayer/lunch breaks for each day.
                   </p>
                 </div>
               </div>
@@ -251,36 +239,6 @@ export default function ScheduleModal({
                 title="Close"
               >
                 <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Quick Action Bar */}
-            <div className="px-5 py-3 border-b border-stone-100 bg-amber-50/50 flex flex-wrap items-center gap-2 shrink-0">
-              <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wide flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                Quick Actions:
-              </span>
-              <button
-                type="button"
-                onClick={applyStandardAllDays}
-                className="text-[11px] font-bold bg-white text-stone-700 hover:text-amber-700 border border-stone-200 hover:border-amber-300 px-2.5 py-1 rounded-lg transition shadow-2xs cursor-pointer"
-              >
-                Set 8am – 9pm All Days
-              </button>
-              <button
-                type="button"
-                onClick={applyFridayJummah}
-                className="text-[11px] font-bold bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition shadow-2xs cursor-pointer flex items-center gap-1"
-              >
-                <Coffee className="w-3 h-3 text-emerald-600" />
-                Add Jummah Break (Fri 1-2:30 PM)
-              </button>
-              <button
-                type="button"
-                onClick={copyMondayToWeekdays}
-                className="text-[11px] font-bold bg-white text-stone-700 hover:text-stone-900 border border-stone-200 px-2.5 py-1 rounded-lg transition shadow-2xs cursor-pointer"
-              >
-                Copy Mon to Tue–Thu
               </button>
             </div>
 
@@ -298,9 +256,10 @@ export default function ScheduleModal({
                   isOpen: true,
                   open: '08:00',
                   close: '21:00',
+                  breaks: [],
                 };
                 const isToday = day === currentDayName;
-                const isBreakActive = !!daySched.break?.enabled;
+                const breaks = Array.isArray(daySched.breaks) ? daySched.breaks : [];
 
                 return (
                   <div
@@ -384,97 +343,91 @@ export default function ScheduleModal({
                           </div>
                         </div>
 
-                        {/* Mid-Day Break Sub-card */}
-                        <div
-                          className={`p-3 rounded-xl border transition ${
-                            isBreakActive
-                              ? 'bg-amber-50/60 border-amber-200'
-                              : 'bg-stone-50/60 border-stone-200/70'
-                          }`}
-                        >
+                        {/* Breaks Section with "+ Add Break" Button */}
+                        <div className="pt-2 border-t border-stone-150 space-y-2.5">
                           <div className="flex items-center justify-between">
-                            <label className="flex items-center gap-2 cursor-pointer">
-                              <input
-                                type="checkbox"
-                                checked={isBreakActive}
-                                onChange={() => toggleBreak(day)}
-                                className="w-4 h-4 text-amber-600 rounded border-stone-300 focus:ring-amber-500 cursor-pointer"
-                              />
-                              <span className="text-xs font-bold text-stone-800 flex items-center gap-1.5">
-                                <Coffee className="w-3.5 h-3.5 text-amber-600" />
-                                Mid-Day Break (Prayer / Lunch)
-                              </span>
-                            </label>
-
-                            {isBreakActive && (
-                              <span className="text-[11px] font-extrabold text-amber-800">
-                                {formatTime12Hour(daySched.break?.start)} – {formatTime12Hour(daySched.break?.end)}
-                              </span>
-                            )}
+                            <span className="text-[11px] font-extrabold uppercase tracking-wider text-stone-700 flex items-center gap-1.5">
+                              <Coffee className="w-3.5 h-3.5 text-amber-600" />
+                              Mid-Day Breaks {breaks.length > 0 && `(${breaks.length})`}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => addBreak(day)}
+                              className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-lg transition cursor-pointer active:scale-95"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>Add Break</span>
+                            </button>
                           </div>
 
-                          {/* Break Details Form */}
-                          {isBreakActive && (
-                            <div className="mt-3 pt-3 border-t border-amber-200/60 space-y-3">
-                              <div className="grid grid-cols-2 gap-3">
-                                <div>
-                                  <label className="text-[10px] font-bold text-stone-600 block mb-1">
-                                    Break Starts (Shop Pauses)
-                                  </label>
-                                  <input
-                                    type="time"
-                                    value={daySched.break?.start || '13:00'}
-                                    onChange={(e) =>
-                                      updateBreakField(day, 'start', e.target.value)
-                                    }
-                                    className="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-[10px] font-bold text-stone-600 block mb-1">
-                                    Break Ends (Shop Reopens)
-                                  </label>
-                                  <input
-                                    type="time"
-                                    value={daySched.break?.end || '14:30'}
-                                    onChange={(e) =>
-                                      updateBreakField(day, 'end', e.target.value)
-                                    }
-                                    className="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                  />
-                                </div>
-                              </div>
+                          {breaks.length === 0 ? (
+                            <p className="text-[11px] text-stone-400 italic py-0.5">
+                              No breaks scheduled. Shop runs continuously throughout operating hours.
+                            </p>
+                          ) : (
+                            <div className="space-y-2">
+                              {breaks.map((b, bIdx) => (
+                                <div
+                                  key={b.id || bIdx}
+                                  className="bg-amber-50/50 border border-amber-200/80 rounded-xl p-3 space-y-2.5"
+                                >
+                                  <div className="flex items-center justify-between gap-2">
+                                    <input
+                                      type="text"
+                                      placeholder="Break reason (e.g. Jummah Prayer, Lunch, Tea)"
+                                      value={b.label || ''}
+                                      onChange={(e) =>
+                                        updateBreak(day, bIdx, { label: e.target.value })
+                                      }
+                                      className="flex-1 bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs font-bold text-stone-800 focus:outline-none focus:border-amber-500 placeholder:text-stone-400"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => removeBreak(day, bIdx)}
+                                      className="p-1.5 text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                                      title="Delete this break"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
 
-                              <div>
-                                <label className="text-[10px] font-bold text-stone-600 block mb-1">
-                                  Break Reason / Display Label for Customers
-                                </label>
-                                <div className="flex items-center gap-2">
-                                  <input
-                                    type="text"
-                                    value={daySched.break?.label || ''}
-                                    onChange={(e) =>
-                                      updateBreakField(day, 'label', e.target.value)
-                                    }
-                                    placeholder={day === 'friday' ? 'Jummah Prayer Break' : 'Lunch Break'}
-                                    className="flex-1 bg-white border border-stone-200 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-stone-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                  />
+                                  <div className="grid grid-cols-2 gap-2.5">
+                                    <div>
+                                      <label className="text-[10px] font-semibold text-stone-500 block mb-0.5">
+                                        Break Starts (Counter Pauses)
+                                      </label>
+                                      <input
+                                        type="time"
+                                        value={b.start || '13:00'}
+                                        onChange={(e) =>
+                                          updateBreak(day, bIdx, { start: e.target.value })
+                                        }
+                                        className="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1 text-xs font-bold text-stone-800 focus:outline-none focus:border-amber-500"
+                                      />
+                                      <span className="text-[10px] text-stone-500 font-medium block mt-0.5">
+                                        {formatTime12Hour(b.start)}
+                                      </span>
+                                    </div>
+
+                                    <div>
+                                      <label className="text-[10px] font-semibold text-stone-500 block mb-0.5">
+                                        Break Ends (Counter Reopens)
+                                      </label>
+                                      <input
+                                        type="time"
+                                        value={b.end || '14:30'}
+                                        onChange={(e) =>
+                                          updateBreak(day, bIdx, { end: e.target.value })
+                                        }
+                                        className="w-full bg-white border border-stone-200 rounded-lg px-2.5 py-1 text-xs font-bold text-stone-800 focus:outline-none focus:border-amber-500"
+                                      />
+                                      <span className="text-[10px] text-stone-500 font-medium block mt-0.5">
+                                        {formatTime12Hour(b.end)}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                  {['Jummah Prayer Break', 'Lunch Break', 'Rest & Cleaning'].map(
-                                    (preset) => (
-                                      <button
-                                        key={preset}
-                                        type="button"
-                                        onClick={() => updateBreakField(day, 'label', preset)}
-                                        className="text-[10px] font-semibold bg-white border border-stone-200 hover:border-amber-400 text-stone-600 hover:text-stone-900 px-2 py-0.5 rounded-md cursor-pointer transition"
-                                      >
-                                        + {preset}
-                                      </button>
-                                    )
-                                  )}
-                                </div>
-                              </div>
+                              ))}
                             </div>
                           )}
                         </div>

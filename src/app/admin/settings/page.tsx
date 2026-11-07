@@ -11,6 +11,9 @@ import {
   DAY_DISPLAY_NAMES,
   DEFAULT_WEEKLY_SCHEDULE,
   DAY_INDEX_MAP,
+  getDayBreaks,
+  getMostFrequentWeeklyTimes,
+  updateWeeklyDefaultTime,
 } from '@/lib/utils/shopHours';
 import ScheduleModal from '@/components/admin/ScheduleModal';
 import {
@@ -59,15 +62,22 @@ export default function AdminSettingsPage() {
       const cached = localStorage.getItem(CACHE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached) as ShopSettings;
+        const weekly = parsed.weekly_schedule || DEFAULT_WEEKLY_SCHEDULE;
+        const { defaultOpen, defaultClose } = getMostFrequentWeeklyTimes(
+          weekly,
+          parsed.opening_time || '08:00',
+          parsed.closing_time || '21:00'
+        );
+
         setSettings(parsed);
         setShopName(parsed.shop_name || 'Chakki Fresh');
         setRatePerKg(parsed.rate_per_kg?.toString() || '15');
         setPhoneNumber(parsed.phone_number || '');
-        setOpeningTime(parsed.opening_time || '08:00');
-        setClosingTime(parsed.closing_time || '21:00');
+        setOpeningTime(defaultOpen);
+        setClosingTime(defaultClose);
         setIsClosedOverride(!!parsed.is_closed_override);
         setClosedReason(parsed.closed_reason || '');
-        setWeeklySchedule(parsed.weekly_schedule || DEFAULT_WEEKLY_SCHEDULE);
+        setWeeklySchedule(weekly);
       }
     } catch {
       // Ignore localStorage parse errors
@@ -85,15 +95,22 @@ export default function AdminSettingsPage() {
         .single();
 
       if (!error && data) {
+        const weekly = (data.weekly_schedule as WeeklySchedule) || DEFAULT_WEEKLY_SCHEDULE;
+        const { defaultOpen, defaultClose } = getMostFrequentWeeklyTimes(
+          weekly,
+          data.opening_time || '08:00',
+          data.closing_time || '21:00'
+        );
+
         setSettings(data as ShopSettings);
         setShopName(data.shop_name || 'Chakki Fresh');
         setRatePerKg(data.rate_per_kg?.toString() || '15');
         setPhoneNumber(data.phone_number || '');
-        setOpeningTime(data.opening_time || '08:00');
-        setClosingTime(data.closing_time || '21:00');
+        setOpeningTime(defaultOpen);
+        setClosingTime(defaultClose);
         setIsClosedOverride(!!data.is_closed_override);
         setClosedReason(data.closed_reason || '');
-        setWeeklySchedule(data.weekly_schedule || DEFAULT_WEEKLY_SCHEDULE);
+        setWeeklySchedule(weekly);
 
         // Update local cache
         localStorage.setItem(CACHE_KEY, JSON.stringify(data));
@@ -131,7 +148,27 @@ export default function AdminSettingsPage() {
   const todaySchedule = weeklySchedule
     ? weeklySchedule[todayKey]
     : DEFAULT_WEEKLY_SCHEDULE[todayKey];
-  const todayBreak = todaySchedule?.break;
+  const todayBreaks = getDayBreaks(todaySchedule);
+
+  // When default open time changes: update state and all days that previously matched old default
+  const handleDefaultOpenChange = (newOpen: string) => {
+    const oldDefault = openingTime;
+    setOpeningTime(newOpen);
+    if (weeklySchedule) {
+      const updated = updateWeeklyDefaultTime(weeklySchedule, 'open', oldDefault, newOpen);
+      setWeeklySchedule(updated);
+    }
+  };
+
+  // When default close time changes: update state and all days that previously matched old default
+  const handleDefaultCloseChange = (newClose: string) => {
+    const oldDefault = closingTime;
+    setClosingTime(newClose);
+    if (weeklySchedule) {
+      const updated = updateWeeklyDefaultTime(weeklySchedule, 'close', oldDefault, newClose);
+      setWeeklySchedule(updated);
+    }
+  };
 
   // Handle Main Settings Form Save
   const handleSave = async (e: React.FormEvent) => {
@@ -148,12 +185,19 @@ export default function AdminSettingsPage() {
     try {
       if (!settings?.id) throw new Error('Settings record not found');
 
+      // Sync default open and close with current weekly schedule mode
+      const { defaultOpen, defaultClose } = getMostFrequentWeeklyTimes(
+        weeklySchedule || DEFAULT_WEEKLY_SCHEDULE,
+        openingTime,
+        closingTime
+      );
+
       const updatedPayload = {
         shop_name: shopName.trim() || 'Chakki Fresh',
         rate_per_kg: numRate,
         phone_number: phoneNumber.trim(),
-        opening_time: openingTime || '08:00',
-        closing_time: closingTime || '21:00',
+        opening_time: defaultOpen,
+        closing_time: defaultClose,
         is_closed_override: isClosedOverride,
         closed_reason: closedReason.trim(),
         weekly_schedule: weeklySchedule || DEFAULT_WEEKLY_SCHEDULE,
@@ -189,11 +233,22 @@ export default function AdminSettingsPage() {
   const handleSaveWeeklySchedule = async (updatedWeekly: WeeklySchedule) => {
     setWeeklySchedule(updatedWeekly);
 
+    // Compute mode open & close times from the customized schedule
+    const { defaultOpen, defaultClose } = getMostFrequentWeeklyTimes(
+      updatedWeekly,
+      openingTime,
+      closingTime
+    );
+    setOpeningTime(defaultOpen);
+    setClosingTime(defaultClose);
+
     if (settings?.id) {
       const { error } = await supabase
         .from('shop_settings')
         .update({
           weekly_schedule: updatedWeekly,
+          opening_time: defaultOpen,
+          closing_time: defaultClose,
           updated_at: new Date().toISOString(),
         })
         .eq('id', settings.id);
@@ -203,14 +258,19 @@ export default function AdminSettingsPage() {
       }
 
       // Update local storage
-      const merged = { ...settings, weekly_schedule: updatedWeekly };
+      const merged = {
+        ...settings,
+        weekly_schedule: updatedWeekly,
+        opening_time: defaultOpen,
+        closing_time: defaultClose,
+      };
       setSettings(merged as ShopSettings);
       localStorage.setItem(CACHE_KEY, JSON.stringify(merged));
     }
 
     setFeedback({
       type: 'success',
-      message: 'Weekly schedule and break timings updated successfully!',
+      message: 'Weekly schedule and breaks saved! Default hours synced.',
     });
     setTimeout(() => setFeedback(null), 3500);
   };
@@ -335,11 +395,18 @@ export default function AdminSettingsPage() {
                     </span>
                   </div>
 
-                  {todayBreak?.enabled && (
-                    <span className="text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-lg flex items-center gap-1">
-                      <Coffee className="w-3 h-3 text-amber-700" />
-                      {todayBreak.label || 'Break'}: {formatTime12Hour(todayBreak.start)} – {formatTime12Hour(todayBreak.end)}
-                    </span>
+                  {todayBreaks.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 justify-end">
+                      {todayBreaks.map((b, idx) => (
+                        <span
+                          key={b.id || idx}
+                          className="text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-lg flex items-center gap-1"
+                        >
+                          <Coffee className="w-3 h-3 text-amber-700" />
+                          {b.label || 'Break'}: {formatTime12Hour(b.start)} – {formatTime12Hour(b.end)}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
 
@@ -354,12 +421,12 @@ export default function AdminSettingsPage() {
                     <span>Customize Weekly Schedule & Breaks</span>
                   </div>
                   <span className="text-[11px] font-bold bg-white/20 px-2 py-0.5 rounded-md flex items-center gap-1 group-hover:bg-white/30 transition">
-                    7 Days & Jummah <Sparkles className="w-3 h-3 text-amber-200" />
+                    7 Days & Breaks <Sparkles className="w-3 h-3 text-amber-200" />
                   </span>
                 </button>
               </div>
 
-              {/* Default Fallback Hours */}
+              {/* Default Hours (Synced with Weekly Mode) */}
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <div>
                   <label className="block text-[11px] font-bold text-stone-700 mb-1 flex items-center gap-1">
@@ -369,11 +436,11 @@ export default function AdminSettingsPage() {
                     type="time"
                     required
                     value={openingTime}
-                    onChange={(e) => setOpeningTime(e.target.value)}
+                    onChange={(e) => handleDefaultOpenChange(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:border-amber-600"
                   />
-                  <span className="block text-[10px] text-stone-500 mt-0.5">
-                    {formatTime12Hour(openingTime)}
+                  <span className="block text-[10px] text-stone-500 mt-0.5 font-medium">
+                    {formatTime12Hour(openingTime)} • Updates matching days
                   </span>
                 </div>
 
@@ -385,11 +452,11 @@ export default function AdminSettingsPage() {
                     type="time"
                     required
                     value={closingTime}
-                    onChange={(e) => setClosingTime(e.target.value)}
+                    onChange={(e) => handleDefaultCloseChange(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:border-amber-600"
                   />
-                  <span className="block text-[10px] text-stone-500 mt-0.5">
-                    {formatTime12Hour(closingTime)}
+                  <span className="block text-[10px] text-stone-500 mt-0.5 font-medium">
+                    {formatTime12Hour(closingTime)} • Updates matching days
                   </span>
                 </div>
               </div>

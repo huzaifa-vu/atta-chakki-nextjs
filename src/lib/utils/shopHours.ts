@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { ShopSettings, WeeklySchedule, DaySchedule, DayOfWeek } from '@/types/database';
+import { ShopSettings, WeeklySchedule, DaySchedule, DayOfWeek, DayBreak } from '@/types/database';
 
 export interface ShopOperatingStatus {
   isOpen: boolean;
@@ -49,24 +49,40 @@ export const DAY_DISPLAY_NAMES: Record<DayOfWeek, string> = {
 };
 
 export const DEFAULT_WEEKLY_SCHEDULE: WeeklySchedule = {
-  monday: { isOpen: true, open: '08:00', close: '21:00' },
-  tuesday: { isOpen: true, open: '08:00', close: '21:00' },
-  wednesday: { isOpen: true, open: '08:00', close: '21:00' },
-  thursday: { isOpen: true, open: '08:00', close: '21:00' },
+  monday: { isOpen: true, open: '08:00', close: '21:00', breaks: [] },
+  tuesday: { isOpen: true, open: '08:00', close: '21:00', breaks: [] },
+  wednesday: { isOpen: true, open: '08:00', close: '21:00', breaks: [] },
+  thursday: { isOpen: true, open: '08:00', close: '21:00', breaks: [] },
   friday: {
     isOpen: true,
     open: '08:00',
     close: '21:00',
-    break: {
-      enabled: true,
-      start: '13:00',
-      end: '14:30',
-      label: 'Jummah Prayer Break',
-    },
+    breaks: [
+      {
+        id: 'fri-jummah',
+        start: '13:00',
+        end: '14:30',
+        label: 'Jummah Prayer Break',
+      },
+    ],
   },
-  saturday: { isOpen: true, open: '08:00', close: '21:00' },
-  sunday: { isOpen: true, open: '08:00', close: '21:00' },
+  saturday: { isOpen: true, open: '08:00', close: '21:00', breaks: [] },
+  sunday: { isOpen: true, open: '08:00', close: '21:00', breaks: [] },
 };
+
+/**
+ * Normalizes all breaks for a day from either breaks array or legacy break field
+ */
+export function getDayBreaks(daySched?: DaySchedule | null): DayBreak[] {
+  if (!daySched) return [];
+  if (Array.isArray(daySched.breaks)) {
+    return daySched.breaks.filter((b) => b && (b.enabled !== false));
+  }
+  if (daySched.break && (daySched.break.enabled ?? true) && daySched.break.start && daySched.break.end) {
+    return [daySched.break];
+  }
+  return [];
+}
 
 /**
  * Converts 24-hr time string ('08:00', '21:30') into clean 12-hr display ('8:00 AM', '9:30 PM')
@@ -201,33 +217,36 @@ export function getShopOperatingStatus(
     };
   }
 
-  // Check break time
-  const dayBreak = todaySchedule.break;
-  const breakEnabled = !!dayBreak?.enabled && !!dayBreak?.start && !!dayBreak?.end;
-  const breakStart = breakEnabled ? parseTimeToMinutes(dayBreak.start) : -1;
-  const breakEnd = breakEnabled ? parseTimeToMinutes(dayBreak.end) : -1;
-  const isDuringBreak = breakEnabled && nowMinutes >= breakStart && nowMinutes < breakEnd;
+  // Check all scheduled breaks for today
+  const allBreaks = getDayBreaks(todaySchedule);
+  const activeBreak = allBreaks.find((b) => {
+    if (!b.start || !b.end) return false;
+    const bStart = parseTimeToMinutes(b.start);
+    const bEnd = parseTimeToMinutes(b.end);
+    return nowMinutes >= bStart && nowMinutes < bEnd;
+  });
 
+  const isDuringBreak = !!activeBreak;
   const formattedHours = `${formatTime12Hour(todaySchedule.open)} – ${formatTime12Hour(todaySchedule.close)}`;
 
-  // 3. During Mid-Day Break (e.g. Jummah prayer 1:00 PM - 2:30 PM)
-  if (isDuringBreak) {
+  // 3. During Mid-Day Break (e.g. Jummah prayer 1:00 PM - 2:30 PM, Lunch, etc.)
+  if (isDuringBreak && activeBreak) {
     const nextOpen = new Date(ref);
-    const [bEndH, bEndM] = dayBreak!.end.split(':').map((s) => parseInt(s, 10) || 0);
+    const [bEndH, bEndM] = activeBreak.end.split(':').map((s) => parseInt(s, 10) || 0);
     nextOpen.setHours(bEndH, bEndM, 0, 0);
-    const breakLabel = dayBreak!.label?.trim() || 'Break';
+    const breakLabel = activeBreak.label?.trim() || 'Break';
 
     return {
       isOpen: false,
-      statusLabel: `Closed • ${breakLabel} until ${formatTime12Hour(dayBreak!.end)}`,
+      statusLabel: `Closed • ${breakLabel} until ${formatTime12Hour(activeBreak.end)}`,
       badgeVariant: 'closed',
       formattedHours,
-      formattedNextOpen: `Today at ${formatTime12Hour(dayBreak!.end)}`,
+      formattedNextOpen: `Today at ${formatTime12Hour(activeBreak.end)}`,
       nextOpenDate: nextOpen,
       isClosedOverride: false,
       isBreakActive: true,
       breakLabel,
-      breakEnd: dayBreak!.end,
+      breakEnd: activeBreak.end,
       todaySchedule,
     };
   }
@@ -266,11 +285,17 @@ export function getShopOperatingStatus(
     };
   }
 
-  // 6. Currently Open!
+  // 6. Currently Open! Check if there is an upcoming break later today
   let statusLabel = `Open Now • Closes at ${formatTime12Hour(todaySchedule.close)}`;
-  if (breakEnabled && nowMinutes < breakStart) {
-    const breakLabel = dayBreak!.label?.trim() || 'Break';
-    statusLabel = `Open Now • ${breakLabel} at ${formatTime12Hour(dayBreak!.start)}`;
+  const upcomingBreak = allBreaks.find((b) => {
+    if (!b.start) return false;
+    const bStart = parseTimeToMinutes(b.start);
+    return nowMinutes < bStart;
+  });
+
+  if (upcomingBreak) {
+    const breakLabel = upcomingBreak.label?.trim() || 'Break';
+    statusLabel = `Open Now • ${breakLabel} at ${formatTime12Hour(upcomingBreak.start)}`;
   }
 
   return {
@@ -364,4 +389,70 @@ export function useShopCountdown(targetDate?: Date | null): CountdownResult {
     formattedString: `${hStr}h : ${mStr}m : ${sStr}s`,
     isExpired: totalSeconds <= 0,
   };
+}
+
+/**
+ * Calculates the most frequent (mode) open and close time across open days in the weekly schedule.
+ */
+export function getMostFrequentWeeklyTimes(
+  weekly?: WeeklySchedule | null,
+  fallbackOpen = '08:00',
+  fallbackClose = '21:00'
+): { defaultOpen: string; defaultClose: string } {
+  if (!weekly) {
+    return { defaultOpen: fallbackOpen, defaultClose: fallbackClose };
+  }
+
+  const openCounts: Record<string, number> = {};
+  const closeCounts: Record<string, number> = {};
+
+  DAYS_ORDER.forEach((day) => {
+    const d = weekly[day];
+    if (d && d.isOpen) {
+      if (d.open) openCounts[d.open] = (openCounts[d.open] || 0) + 1;
+      if (d.close) closeCounts[d.close] = (closeCounts[d.close] || 0) + 1;
+    }
+  });
+
+  let defaultOpen = fallbackOpen;
+  let maxOpenCount = 0;
+  for (const [time, count] of Object.entries(openCounts)) {
+    if (count > maxOpenCount) {
+      maxOpenCount = count;
+      defaultOpen = time;
+    }
+  }
+
+  let defaultClose = fallbackClose;
+  let maxCloseCount = 0;
+  for (const [time, count] of Object.entries(closeCounts)) {
+    if (count > maxCloseCount) {
+      maxCloseCount = count;
+      defaultClose = time;
+    }
+  }
+
+  return { defaultOpen, defaultClose };
+}
+
+/**
+ * Propagates a change in default open or close time to all days currently matching the old default.
+ */
+export function updateWeeklyDefaultTime(
+  weekly: WeeklySchedule,
+  field: 'open' | 'close',
+  oldDefault: string,
+  newDefault: string
+): WeeklySchedule {
+  const updated: WeeklySchedule = { ...weekly };
+  DAYS_ORDER.forEach((day) => {
+    const d = updated[day];
+    if (d && d[field] === oldDefault) {
+      updated[day] = {
+        ...d,
+        [field]: newDefault,
+      };
+    }
+  });
+  return updated;
 }

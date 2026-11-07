@@ -1,17 +1,19 @@
 export type OrderStatus = 'queued' | 'grinding' | 'ready' | 'completed';
 
 export interface DayBreak {
-  enabled: boolean;
+  id?: string;
   start: string; // '13:00' (24-hr format)
   end: string;   // '14:30' (24-hr format)
   label?: string; // e.g. 'Jummah Prayer' or 'Lunch Break'
+  enabled?: boolean; // legacy compatibility
 }
 
 export interface DaySchedule {
   isOpen: boolean;
   open: string;  // '08:00'
   close: string; // '21:00'
-  break?: DayBreak;
+  break?: DayBreak; // legacy single break support
+  breaks?: DayBreak[]; // multiple breaks per day support
 }
 
 export type DayOfWeek =

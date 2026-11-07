@@ -27,8 +27,6 @@ import {
   X,
   Check,
   ExternalLink,
-  Moon,
-  Coffee,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -316,12 +314,12 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between pb-24">
-      {/* Top Header - Desktop-Optimized Elevated Navbar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs px-4 py-3">
+      {/* Top Header - Clean, Modern Admin Navbar */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs px-4 sm:px-6 py-3">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
-          {/* Left: Brand & Admin Identity */}
+          {/* Left: Brand Identity with Live Status Indicator */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-500/20 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shadow-amber-500/20 shrink-0">
               <Wheat className="w-5 h-5" />
             </div>
             <div>
@@ -332,121 +330,72 @@ export default function AdminDashboardPage() {
                 <span className="text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md tracking-wider">
                   Admin
                 </span>
-                {/* Compact dot on mobile */}
-                <span
-                  className={`sm:hidden w-2 h-2 rounded-full ${
-                    shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                  }`}
-                  title={shopStatus.isOpen ? 'Open' : 'Closed'}
-                />
               </div>
-              <p className="text-[11px] text-stone-500 font-medium hidden sm:block">
-                Counter Operations & Milling Control
-              </p>
+              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-stone-500 font-medium">
+                <span className="flex items-center gap-1.5">
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                    }`}
+                  />
+                  <span className={`font-bold ${shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'}`}>
+                    {shopStatus.isOpen
+                      ? 'Counter Open'
+                      : shopStatus.isBreakActive
+                      ? shopStatus.breakLabel || 'Break'
+                      : 'Counter Closed'}
+                  </span>
+                  <span>
+                    • {shopStatus.isOpen
+                      ? `Closes ${formatTime12Hour(shopStatus.todaySchedule?.close)}`
+                      : `Opens ${shopStatus.formattedNextOpen}`}
+                  </span>
+                </span>
+                <span className="hidden sm:inline text-stone-300">•</span>
+                <span className="hidden sm:inline">Rate: {currency} {Number(currentRate).toFixed(0)}/kg</span>
+              </div>
             </div>
           </div>
 
-          {/* Center (Desktop): Operational Status, Rates & Live Bags */}
-          <div className="hidden md:flex items-center gap-2.5">
-            {/* Live Operating Status Pill */}
-            <Link
-              href="/admin/settings"
-              prefetch={true}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 transition hover:opacity-90 cursor-pointer shadow-2xs ${
-                shopStatus.isOpen
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-amber-50 text-amber-900 border-amber-200'
-              }`}
-              title="Click to view/change hours in settings"
-            >
-              {shopStatus.isOpen ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Counter Open</span>
-                  <span className="text-emerald-700/80 font-medium">
-                    • Closes{' '}
-                    {shopStatus.todaySchedule?.close
-                      ? formatTime12Hour(shopStatus.todaySchedule.close)
-                      : '9:00 PM'}
-                  </span>
-                </>
-              ) : shopStatus.isBreakActive ? (
-                <>
-                  <Coffee className="w-3.5 h-3.5 text-amber-700" />
-                  <span>{shopStatus.breakLabel || 'Break'}</span>
-                  <span className="text-amber-700/80 font-medium">
-                    • Reopens {shopStatus.formattedNextOpen}
-                  </span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Closed</span>
-                  <span className="text-amber-700/80 font-medium">
-                    • Opens {shopStatus.formattedNextOpen}
-                  </span>
-                </>
-              )}
-            </Link>
-
-            {/* Milling Rate Chip */}
-            <div className="px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-stone-700 flex items-center gap-1 shadow-2xs">
-              <span className="text-stone-500 font-medium">Rate:</span>
-              <span className="font-extrabold text-stone-900">
-                {currency} {Number(currentRate).toFixed(0)}/kg
-              </span>
-            </div>
-
-            {/* Live Pipeline Breakdown (Desktop XL) */}
-            <div className="hidden xl:flex items-center gap-2 px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold shadow-2xs">
-              <span className="text-stone-500 font-medium">Bags:</span>
-              <span className="text-amber-800 font-extrabold">{queuedOrders.length} Queued</span>
-              <span className="text-stone-300">•</span>
-              <span className="text-indigo-800 font-extrabold">{grindingOrders.length} Grinding</span>
-              <span className="text-stone-300">•</span>
-              <span className="text-emerald-800 font-extrabold">{readyOrders.length} Ready</span>
-            </div>
-          </div>
-
-          {/* Right: Actions */}
+          {/* Right: Sleek, Uniform Action Buttons */}
           <div className="flex items-center gap-2 shrink-0">
             {/* Customer Storefront Link */}
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-amber-800 bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-amber-300 px-3 py-2 rounded-xl transition shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Open customer view in new tab"
             >
               <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
-              <span className="hidden lg:inline">Customer View</span>
+              <span className="hidden sm:inline">Customer View</span>
             </a>
 
             {/* Refresh Button */}
             <button
               onClick={handleRefresh}
-              className="p-2 sm:px-2.5 sm:py-2 text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold shadow-2xs"
+              className="p-2 sm:px-3 sm:py-2 text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
               title="Refresh order pipeline"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-amber-600' : ''}`} />
-              <span className="hidden lg:inline">Refresh</span>
+              <span className="hidden sm:inline">Refresh</span>
             </button>
 
             {/* Settings Link */}
             <Link
               href="/admin/settings"
               prefetch={true}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-800 bg-stone-50 hover:bg-amber-50 border border-stone-200 hover:border-amber-300 px-3 py-2 rounded-xl transition shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-800 bg-amber-50/70 hover:bg-amber-100 border border-amber-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Shop Settings & Hours"
             >
-              <SettingsIcon className="w-3.5 h-3.5 text-stone-600" />
+              <SettingsIcon className="w-3.5 h-3.5 text-amber-700" />
               <span className="hidden sm:inline">Settings</span>
             </Link>
 
             {/* Sign Out Button */}
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50/70 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-xl transition shadow-2xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Sign Out of Admin Portal"
             >
               <LogOut className="w-3.5 h-3.5 text-rose-600" />
