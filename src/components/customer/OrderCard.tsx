@@ -72,15 +72,17 @@ export default function OrderCard({
       {isReady && (
         <>
           {showClosedState ? (
-            /* Night / Shop Closed Header */
-            <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 px-5 sm:px-6 py-3.5 text-white flex items-center justify-between shadow-xs">
+            /* Night / Shop Closed Header - Bright & Light */
+            <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 px-5 sm:px-6 py-3.5 text-stone-900 flex items-center justify-between border-b border-amber-200/80 shadow-2xs">
               <div className="flex items-center gap-2">
-                <Moon className="w-4 h-4 text-amber-300 shrink-0 animate-pulse" />
-                <span className="text-xs sm:text-sm font-extrabold tracking-wide">
+                <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+                  <Moon className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs sm:text-sm font-black tracking-tight text-stone-900">
                   Flour Ready & Stored Safely
                 </span>
               </div>
-              <span className="text-[11px] bg-amber-400/20 text-amber-300 border border-amber-400/30 font-bold px-2.5 py-0.5 rounded-full">
+              <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full">
                 Counter Closed
               </span>
             </div>
@@ -104,20 +106,20 @@ export default function OrderCard({
       <div className="p-5 sm:p-7 space-y-4">
         {/* Closed Night Alert: Countdown Timer & Opening Notice */}
         {showClosedState && (
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/90 to-amber-50/60 border border-indigo-200/80 space-y-3">
+          <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-indigo-950 text-xs font-bold">
-                <Clock className="w-4 h-4 text-indigo-600" />
+              <div className="flex items-center gap-1.5 text-amber-950 text-xs font-bold">
+                <Clock className="w-4 h-4 text-amber-600" />
                 <span>Chakki Counter Opens In</span>
               </div>
-              <span className="text-[11px] font-semibold text-indigo-800">
+              <span className="text-[11px] font-semibold text-amber-900">
                 {shopStatus.formattedNextOpen}
               </span>
             </div>
 
             {/* Countdown Digits */}
-            <div className="text-center py-1 bg-white/80 backdrop-blur-xs rounded-xl border border-indigo-100 shadow-2xs">
-              <span className="font-mono text-2xl sm:text-3xl font-black text-indigo-950 tracking-wider">
+            <div className="text-center py-2 bg-white rounded-xl border border-amber-200/70 shadow-2xs">
+              <span className="font-mono text-2xl sm:text-3xl font-black text-amber-950 tracking-wider">
                 {countdown.formattedString}
               </span>
             </div>

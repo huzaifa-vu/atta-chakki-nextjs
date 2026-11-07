@@ -27,7 +27,6 @@ import {
   ArrowRight,
   AlertCircle,
   Moon,
-  Sun,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -125,13 +124,13 @@ export default function CustomerDashboard() {
   const hasActiveOrders = activeOrders.length > 0;
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between">
-      {/* Top Header - Redesigned & Balanced for Desktop and Mobile */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 px-4 sm:px-8 py-3.5 shadow-2xs">
+    <div className="min-h-screen bg-[#fcfbf9] flex flex-col justify-between">
+      {/* Top Header - Bright, Fresh & Modern */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-8 py-3.5 shadow-2xs">
         <div className="max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-between gap-4">
           {/* Left: Brand Identity */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shadow-amber-500/25">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-sm shadow-amber-500/20">
               <Wheat className="w-5 h-5" />
             </div>
             <div>
@@ -165,7 +164,7 @@ export default function CustomerDashboard() {
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Open Now</span>
-                  <span className="text-emerald-600/70 font-medium">• Closes {formatTime12Hour(settings?.closing_time)}</span>
+                  <span className="text-emerald-700/80 font-medium">• Closes {formatTime12Hour(settings?.closing_time)}</span>
                 </>
               ) : (
                 <>
@@ -177,7 +176,7 @@ export default function CustomerDashboard() {
             </div>
 
             {/* Milling Rate Chip */}
-            <div className="px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200/80 text-xs font-bold text-stone-700 flex items-center gap-1">
+            <div className="px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-stone-700 flex items-center gap-1">
               <span className="text-stone-500 font-medium">Rate:</span>
               <span className="font-extrabold text-stone-900">{currency} {Number(currentRate).toFixed(0)}/kg</span>
             </div>
@@ -233,70 +232,82 @@ export default function CustomerDashboard() {
           </div>
         )}
 
-        {/* State 1: ZERO active orders - Rich, engaging customer landing experience */}
+        {/* State 1: ZERO active orders - BRIGHT, LIGHT, FRIENDLY HERO */}
         {!hasActiveOrders && !loading && (
           <div className="space-y-6 sm:space-y-8">
-            {/* 1. Hero Tracker Card - QR SCANNER AS PRIMARY ACTION */}
-            <section className="bg-gradient-to-br from-amber-600 via-amber-700 to-stone-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl shadow-amber-900/20 relative overflow-hidden">
-              {/* Subtle background decorative shapes */}
-              <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
-              <div className="absolute right-12 top-6 opacity-10 pointer-events-none">
-                <Wheat className="w-48 h-48" />
+            {/* 1. Hero Tracker Card - Bright Light Mode with QR Focal Centerpiece */}
+            <section className="bg-white rounded-3xl p-6 sm:p-10 border border-stone-200 shadow-lg shadow-stone-200/40 relative overflow-hidden">
+              {/* Subtle fresh decorative glow */}
+              <div className="absolute -top-16 -right-16 w-80 h-80 rounded-full bg-gradient-to-br from-amber-100/70 via-amber-50/40 to-transparent blur-3xl pointer-events-none" />
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600" />
+              <div className="absolute right-6 bottom-4 opacity-10 pointer-events-none text-amber-600">
+                <Wheat className="w-56 h-56" />
               </div>
 
               <div className="space-y-6 max-w-2xl relative z-10">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-[10px] sm:text-xs uppercase tracking-wider font-extrabold text-amber-200 bg-black/25 px-3 py-1 rounded-full inline-block backdrop-blur-sm border border-white/10">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wider font-extrabold text-amber-800 bg-amber-50 px-3 py-1 rounded-full inline-block border border-amber-200">
                       Live Milling Tracker
                     </span>
-                    <span className="text-[10px] sm:text-xs font-bold text-amber-200/90 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-sm">
-                      {shopStatus.isOpen ? '● Counter Open' : '🌙 Counter Closed'}
+                    <span
+                      className={`text-[10px] sm:text-xs font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5 ${
+                        shopStatus.isOpen
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : 'bg-amber-50 text-amber-800 border border-amber-200'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                        }`}
+                      />
+                      <span>{shopStatus.isOpen ? 'Counter Open' : 'Counter Closed'}</span>
                     </span>
                   </div>
 
-                  <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
+                  <h2 className="text-2xl sm:text-4xl font-black text-stone-900 tracking-tight leading-tight">
                     Track Your Wheat Grinding Live
                   </h2>
-                  <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed max-w-xl">
+                  <p className="text-xs sm:text-sm text-stone-600 leading-relaxed max-w-xl">
                     Received an order slip from our counter? Scan your slip QR code with your phone camera for instant 1-second live tracking.
                   </p>
                 </div>
 
-                {/* PRIMARY ACTION: Big Prominent QR Scanner Button */}
-                <div className="space-y-3">
+                {/* PRIMARY ACTION: High-Visibility Vibrant QR Scanner Button */}
+                <div className="space-y-3.5">
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setIsScanModalOpen(true)}
-                      className="py-4 px-6 rounded-2xl bg-white text-stone-900 hover:bg-amber-50 active:scale-[0.98] transition shadow-xl shadow-black/20 flex items-center justify-center sm:justify-start gap-3.5 font-black text-sm sm:text-base cursor-pointer group"
+                      className="py-4 px-6 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-[0.98] text-white transition shadow-lg shadow-amber-500/25 flex items-center justify-center sm:justify-start gap-3.5 font-black text-sm sm:text-base cursor-pointer group"
                     >
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-500/30 group-hover:scale-105 transition">
+                      <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shadow-xs group-hover:scale-105 transition">
                         <QrCode className="w-6 h-6" />
                       </div>
                       <div className="text-left">
-                        <span className="block leading-tight text-stone-900 font-black">
+                        <span className="block leading-tight font-black text-white">
                           Scan Slip QR Code
                         </span>
-                        <span className="block text-[11px] font-semibold text-stone-500 mt-0.5">
+                        <span className="block text-[11px] font-semibold text-amber-100 mt-0.5">
                           Instant camera lookup from your slip
                         </span>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-amber-600 ml-auto hidden sm:block group-hover:translate-x-1 transition" />
+                      <ArrowRight className="w-5 h-5 text-amber-200 ml-auto hidden sm:block group-hover:translate-x-1 transition" />
                     </button>
                   </div>
 
-                  {/* SECONDARY ACTION: Inline 4-Digit PIN Input Form */}
-                  <div className="pt-2 border-t border-white/15">
+                  {/* SECONDARY ACTION: Crisp Clean Light-Mode PIN Input */}
+                  <div className="pt-2.5 border-t border-stone-200/80">
                     <form
                       onSubmit={handleInlinePinLookup}
                       className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-md"
                     >
-                      <span className="text-xs font-semibold text-amber-200/90 shrink-0">
+                      <span className="text-xs font-bold text-stone-600 shrink-0">
                         Or enter 4-digit PIN:
                       </span>
                       <div className="relative flex-1">
-                        <KeyRound className="w-3.5 h-3.5 text-amber-300 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <KeyRound className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
                         <input
                           type="text"
                           maxLength={4}
@@ -306,13 +317,13 @@ export default function CustomerDashboard() {
                             setInlineError(null);
                           }}
                           placeholder="e.g. 9457"
-                          className="w-full pl-8 pr-3 py-2 rounded-xl bg-black/30 text-white placeholder-amber-200/40 font-mono font-bold text-xs tracking-wider border border-white/20 focus:border-amber-300 focus:outline-none transition"
+                          className="w-full pl-8 pr-3 py-2 rounded-xl bg-stone-50 border border-stone-200 text-stone-900 placeholder:text-stone-400 font-mono font-bold text-xs tracking-wider focus:bg-white focus:border-amber-500 focus:outline-none transition"
                         />
                       </div>
                       <button
                         type="submit"
                         disabled={inlinePin.length !== 4 || inlineLoading}
-                        className="py-2 px-4 rounded-xl font-bold text-xs text-stone-900 bg-amber-400 hover:bg-amber-300 active:scale-95 transition shadow-xs disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1 shrink-0"
+                        className="py-2 px-4 rounded-xl font-bold text-xs text-white bg-stone-900 hover:bg-stone-800 active:scale-95 transition shadow-xs disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1 shrink-0"
                       >
                         {inlineLoading ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -324,8 +335,8 @@ export default function CustomerDashboard() {
 
                     {/* Inline Error Message */}
                     {inlineError && (
-                      <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold bg-rose-950/70 text-rose-200 border border-rose-400/40 px-3 py-1.5 rounded-xl backdrop-blur-xs">
-                        <AlertCircle className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                      <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold bg-rose-50 text-rose-800 border border-rose-200 px-3 py-1.5 rounded-xl">
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                         <span>{inlineError}</span>
                       </div>
                     )}
@@ -334,7 +345,7 @@ export default function CustomerDashboard() {
               </div>
             </section>
 
-            {/* 2. Live Chakki Status & Rates Strip */}
+            {/* 2. Live Chakki Status & Rates Strip - Crisp White Cards */}
             <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1">
                 <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
@@ -450,32 +461,38 @@ export default function CustomerDashboard() {
               </div>
             </section>
 
-            {/* 4. Trust Badges */}
-            <section className="bg-stone-900 rounded-3xl p-6 sm:p-8 text-white space-y-4">
+            {/* 4. Trust Badges - BRIGHT LIGHT MODERN STYLE */}
+            <section className="bg-gradient-to-br from-amber-50/40 via-white to-stone-50/50 rounded-3xl p-6 sm:p-8 border border-stone-200 shadow-xs space-y-4">
               <div className="text-center max-w-lg mx-auto space-y-1">
-                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+                <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-widest">
                   Why Stone-Ground Chakki Flour?
                 </span>
-                <h3 className="text-lg sm:text-xl font-black">Pure Wheat. Maximum Nutrition.</h3>
+                <h3 className="text-lg sm:text-xl font-black text-stone-900">Pure Wheat. Maximum Nutrition.</h3>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div className="p-4 bg-stone-800/80 rounded-2xl border border-stone-700/60 text-center space-y-1.5">
-                  <ShieldCheck className="w-6 h-6 text-amber-400 mx-auto" />
-                  <h5 className="font-bold text-sm">100% Whole Wheat</h5>
-                  <p className="text-xs text-stone-400">Zero maida, zero starch dilution. 100% genuine wheat grain.</p>
+                <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-2xs text-center space-y-2">
+                  <div className="w-11 h-11 mx-auto rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shadow-2xs">
+                    <ShieldCheck className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <h5 className="font-black text-sm text-stone-900">100% Whole Wheat</h5>
+                  <p className="text-xs text-stone-600 leading-relaxed">Zero maida, zero starch dilution. 100% genuine wheat grain.</p>
                 </div>
 
-                <div className="p-4 bg-stone-800/80 rounded-2xl border border-stone-700/60 text-center space-y-1.5">
-                  <Sparkles className="w-6 h-6 text-amber-400 mx-auto" />
-                  <h5 className="font-bold text-sm">Zero Preservatives</h5>
-                  <p className="text-xs text-stone-400">Freshly milled on demand. No chemical bleaches or shelf stabilizers.</p>
+                <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-2xs text-center space-y-2">
+                  <div className="w-11 h-11 mx-auto rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shadow-2xs">
+                    <Sparkles className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <h5 className="font-black text-sm text-stone-900">Zero Preservatives</h5>
+                  <p className="text-xs text-stone-600 leading-relaxed">Freshly milled on demand. No chemical bleaches or shelf stabilizers.</p>
                 </div>
 
-                <div className="p-4 bg-stone-800/80 rounded-2xl border border-stone-700/60 text-center space-y-1.5">
-                  <Clock className="w-6 h-6 text-amber-400 mx-auto" />
-                  <h5 className="font-bold text-sm">Zero Queue Waiting</h5>
-                  <p className="text-xs text-stone-400">Drop your wheat, track from home, and collect the moment it is ready.</p>
+                <div className="p-5 bg-white rounded-2xl border border-stone-200 shadow-2xs text-center space-y-2">
+                  <div className="w-11 h-11 mx-auto rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shadow-2xs">
+                    <Clock className="w-5 h-5 text-amber-700" />
+                  </div>
+                  <h5 className="font-black text-sm text-stone-900">Zero Queue Waiting</h5>
+                  <p className="text-xs text-stone-600 leading-relaxed">Drop your wheat, track from home, and collect the moment it is ready.</p>
                 </div>
               </div>
             </section>
