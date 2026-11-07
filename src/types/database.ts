@@ -6,6 +6,10 @@ export interface ShopSettings {
   phone_number: string;
   rate_per_kg: number;
   currency: string;
+  opening_time?: string;
+  closing_time?: string;
+  is_closed_override?: boolean;
+  closed_reason?: string;
   updated_at: string;
 }
 

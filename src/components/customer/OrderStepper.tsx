@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 
 interface OrderStepperProps {
   status: OrderStatus;
+  compact?: boolean;
 }
 
 interface StepConfig {
@@ -59,7 +60,7 @@ const STATUS_INDEX: Record<OrderStatus, number> = {
   completed: 3,
 };
 
-export default function OrderStepper({ status }: OrderStepperProps) {
+export default function OrderStepper({ status, compact = false }: OrderStepperProps) {
   const currentIndex = STATUS_INDEX[status] ?? 0;
   const currentStep = STEPS[currentIndex] || STEPS[0];
   const CurrentIcon = currentStep.icon;
@@ -70,7 +71,7 @@ export default function OrderStepper({ status }: OrderStepperProps) {
   const isCompleted = status === 'completed';
 
   return (
-    <div className="w-full space-y-3.5">
+    <div className="w-full space-y-3">
       {/* 1. Modern Segmented Progress Bar (Instagram Stories / Apple style) */}
       <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
         {STEPS.map((step, idx) => {
@@ -133,22 +134,23 @@ export default function OrderStepper({ status }: OrderStepperProps) {
         })}
       </div>
 
-      {/* 2. Hero Active Status Spotlight Card */}
-      <motion.div
-        layout
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className={`p-4 sm:p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
-          isReady
-            ? 'bg-gradient-to-br from-emerald-50 to-teal-50/60 border-emerald-300 shadow-sm shadow-emerald-500/10'
-            : isGrinding
-            ? 'bg-gradient-to-br from-amber-50 via-orange-50/40 to-amber-50/60 border-amber-300 shadow-sm shadow-amber-500/10'
-            : isCompleted
-            ? 'bg-stone-50 border-stone-200'
-            : 'bg-stone-50/80 border-stone-200'
-        }`}
-      >
+      {/* 2. Hero Active Status Spotlight Card (Hidden if compact) */}
+      {!compact && (
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`p-4 sm:p-5 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+            isReady
+              ? 'bg-gradient-to-br from-emerald-50 to-teal-50/60 border-emerald-300 shadow-sm shadow-emerald-500/10'
+              : isGrinding
+              ? 'bg-gradient-to-br from-amber-50 via-orange-50/40 to-amber-50/60 border-amber-300 shadow-sm shadow-amber-500/10'
+              : isCompleted
+              ? 'bg-stone-50 border-stone-200'
+              : 'bg-stone-50/80 border-stone-200'
+          }`}
+        >
         <div className="flex items-center justify-between gap-3 relative z-10">
           <div className="flex items-center gap-3.5 min-w-0">
             {/* Dynamic Animated Icon Avatar */}
@@ -262,6 +264,7 @@ export default function OrderStepper({ status }: OrderStepperProps) {
           </div>
         </div>
       </motion.div>
+      )}
     </div>
   );
 }

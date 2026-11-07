@@ -8,6 +8,7 @@ import LiveQRScannerModal from '@/components/customer/LiveQRScannerModal';
 import AddOrderModal from '@/components/customer/AddOrderModal';
 import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/types/database';
+import { useShopOperatingStatus, formatTime12Hour } from '@/lib/utils/shopHours';
 import {
   Wheat,
   QrCode,
@@ -25,6 +26,8 @@ import {
   Clock,
   ArrowRight,
   AlertCircle,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -53,6 +56,7 @@ export default function CustomerDashboard() {
   const [inlineError, setInlineError] = useState<string | null>(null);
 
   const supabase = createClient();
+  const shopStatus = useShopOperatingStatus(settings);
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -122,33 +126,83 @@ export default function CustomerDashboard() {
 
   return (
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between">
-      {/* Top Header - Responsive & Clean */}
-      <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-8 py-3.5">
-        <div className="max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shadow-amber-500/20">
+      {/* Top Header - Redesigned & Balanced for Desktop and Mobile */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 px-4 sm:px-8 py-3.5 shadow-2xs">
+        <div className="max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-between gap-4">
+          {/* Left: Brand Identity */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shadow-amber-500/25">
               <Wheat className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
-                <h1 className="text-base sm:text-lg font-black text-stone-900 tracking-tight">
+                <h1 className="text-base sm:text-lg font-black text-stone-900 tracking-tight leading-none">
                   {shopName}
                 </h1>
-                <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span
+                  className={`inline-block w-2 h-2 rounded-full ${
+                    shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                  }`}
+                />
               </div>
-              <p className="text-[11px] sm:text-xs text-stone-500 font-medium">
-                Live Flour Grinding • {currency} {Number(currentRate).toFixed(0)}/kg
+              <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-0.5">
+                Fresh Stone Ground Atta • Pure & Live
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          {/* Center: Live Operating Status & Milling Rate Badge (Desktop & Tablet) */}
+          <div className="hidden md:flex items-center gap-2.5">
+            {/* Live Open/Closed Pill */}
+            <div
+              className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
+                shopStatus.isOpen
+                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                  : 'bg-amber-50 text-amber-800 border-amber-200'
+              }`}
+            >
+              {shopStatus.isOpen ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span>Open Now</span>
+                  <span className="text-emerald-600/70 font-medium">• Closes {formatTime12Hour(settings?.closing_time)}</span>
+                </>
+              ) : (
+                <>
+                  <Moon className="w-3.5 h-3.5 text-amber-700" />
+                  <span>Closed</span>
+                  <span className="text-amber-700/80 font-medium">• Opens {shopStatus.formattedNextOpen}</span>
+                </>
+              )}
+            </div>
+
+            {/* Milling Rate Chip */}
+            <div className="px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200/80 text-xs font-bold text-stone-700 flex items-center gap-1">
+              <span className="text-stone-500 font-medium">Rate:</span>
+              <span className="font-extrabold text-stone-900">{currency} {Number(currentRate).toFixed(0)}/kg</span>
+            </div>
+          </div>
+
+          {/* Right: Quick Actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {hasActiveOrders && (
+              <button
+                type="button"
+                onClick={() => setIsAddBagModalOpen(true)}
+                className="hidden sm:inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs border border-amber-200 transition cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Bag</span>
+              </button>
+            )}
+
             <button
               onClick={handleManualRefresh}
-              className="p-2 text-stone-500 hover:text-stone-800 rounded-xl hover:bg-stone-100 transition cursor-pointer"
+              className="p-2 sm:px-3 sm:py-2 text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
               title="Refresh status"
             >
-              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Refresh</span>
             </button>
           </div>
         </div>
@@ -182,75 +236,99 @@ export default function CustomerDashboard() {
         {/* State 1: ZERO active orders - Rich, engaging customer landing experience */}
         {!hasActiveOrders && !loading && (
           <div className="space-y-6 sm:space-y-8">
-            {/* 1. Hero Tracker Card with Direct Inline PIN Input */}
-            <section className="bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 rounded-3xl p-6 sm:p-10 text-white shadow-xl shadow-amber-600/15 relative overflow-hidden">
-              <div className="space-y-5 max-w-2xl">
-                <div className="space-y-1.5">
-                  <span className="text-[10px] sm:text-xs uppercase tracking-wider font-extrabold text-amber-100 bg-black/15 px-3 py-1 rounded-full inline-block backdrop-blur-sm">
-                    Live Milling Tracker
-                  </span>
+            {/* 1. Hero Tracker Card - QR SCANNER AS PRIMARY ACTION */}
+            <section className="bg-gradient-to-br from-amber-600 via-amber-700 to-stone-900 rounded-3xl p-6 sm:p-10 text-white shadow-xl shadow-amber-900/20 relative overflow-hidden">
+              {/* Subtle background decorative shapes */}
+              <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+              <div className="absolute right-12 top-6 opacity-10 pointer-events-none">
+                <Wheat className="w-48 h-48" />
+              </div>
+
+              <div className="space-y-6 max-w-2xl relative z-10">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] sm:text-xs uppercase tracking-wider font-extrabold text-amber-200 bg-black/25 px-3 py-1 rounded-full inline-block backdrop-blur-sm border border-white/10">
+                      Live Milling Tracker
+                    </span>
+                    <span className="text-[10px] sm:text-xs font-bold text-amber-200/90 bg-white/10 px-2.5 py-1 rounded-full backdrop-blur-sm">
+                      {shopStatus.isOpen ? '● Counter Open' : '🌙 Counter Closed'}
+                    </span>
+                  </div>
+
                   <h2 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight">
                     Track Your Wheat Grinding Live
                   </h2>
-                  <p className="text-xs sm:text-sm text-amber-50/90 leading-relaxed">
-                    Have an order slip from our counter? Enter your 4-digit PIN or scan your QR code with your camera to follow the stone milling progress in real-time.
+                  <p className="text-xs sm:text-sm text-amber-100/90 leading-relaxed max-w-xl">
+                    Received an order slip from our counter? Scan your slip QR code with your phone camera for instant 1-second live tracking.
                   </p>
                 </div>
 
-                {/* Inline Direct PIN Input Box */}
-                <div className="space-y-2 pt-1">
-                  <form onSubmit={handleInlinePinLookup} className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 max-w-md">
-                    <div className="relative flex-1">
-                      <KeyRound className="w-4 h-4 text-amber-200 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                      <input
-                        type="text"
-                        maxLength={4}
-                        value={inlinePin}
-                        onChange={(e) => {
-                          setInlinePin(e.target.value.replace(/[^0-9]/g, ''));
-                          setInlineError(null);
-                        }}
-                        placeholder="Enter 4-Digit PIN (e.g. 9457)"
-                        className="w-full pl-10 pr-4 py-3 rounded-xl bg-black/20 text-white placeholder-amber-200/60 font-mono font-bold text-sm tracking-wider border border-white/20 focus:border-amber-300 focus:outline-none transition"
-                      />
-                    </div>
-                    <button
-                      type="submit"
-                      disabled={inlinePin.length !== 4 || inlineLoading}
-                      className="py-3 px-5 rounded-xl font-black text-xs sm:text-sm text-stone-900 bg-white hover:bg-amber-50 active:scale-95 transition shadow-sm disabled:opacity-50 cursor-pointer flex items-center justify-center gap-1.5 shrink-0"
-                    >
-                      {inlineLoading ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin text-amber-600" />
-                          <span>Checking...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>Track Bag</span>
-                          <ArrowRight className="w-4 h-4" />
-                        </>
-                      )}
-                    </button>
-                  </form>
-
-                  {/* Inline Error Message */}
-                  {inlineError && (
-                    <div className="inline-flex items-center gap-1.5 text-xs font-semibold bg-rose-950/40 text-rose-100 border border-rose-400/40 px-3 py-1.5 rounded-xl backdrop-blur-xs">
-                      <AlertCircle className="w-3.5 h-3.5 text-rose-300 shrink-0" />
-                      <span>{inlineError}</span>
-                    </div>
-                  )}
-
-                  {/* Secondary Camera QR Scan Button */}
-                  <div className="pt-1">
+                {/* PRIMARY ACTION: Big Prominent QR Scanner Button */}
+                <div className="space-y-3">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                     <button
                       type="button"
                       onClick={() => setIsScanModalOpen(true)}
-                      className="inline-flex items-center gap-2 py-2 px-3.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold border border-white/20 transition cursor-pointer backdrop-blur-xs"
+                      className="py-4 px-6 rounded-2xl bg-white text-stone-900 hover:bg-amber-50 active:scale-[0.98] transition shadow-xl shadow-black/20 flex items-center justify-center sm:justify-start gap-3.5 font-black text-sm sm:text-base cursor-pointer group"
                     >
-                      <QrCode className="w-4 h-4 text-amber-200" />
-                      <span>Or Scan Slip with Camera</span>
+                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-md shadow-amber-500/30 group-hover:scale-105 transition">
+                        <QrCode className="w-6 h-6" />
+                      </div>
+                      <div className="text-left">
+                        <span className="block leading-tight text-stone-900 font-black">
+                          Scan Slip QR Code
+                        </span>
+                        <span className="block text-[11px] font-semibold text-stone-500 mt-0.5">
+                          Instant camera lookup from your slip
+                        </span>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-amber-600 ml-auto hidden sm:block group-hover:translate-x-1 transition" />
                     </button>
+                  </div>
+
+                  {/* SECONDARY ACTION: Inline 4-Digit PIN Input Form */}
+                  <div className="pt-2 border-t border-white/15">
+                    <form
+                      onSubmit={handleInlinePinLookup}
+                      className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 max-w-md"
+                    >
+                      <span className="text-xs font-semibold text-amber-200/90 shrink-0">
+                        Or enter 4-digit PIN:
+                      </span>
+                      <div className="relative flex-1">
+                        <KeyRound className="w-3.5 h-3.5 text-amber-300 absolute left-3 top-1/2 -translate-y-1/2" />
+                        <input
+                          type="text"
+                          maxLength={4}
+                          value={inlinePin}
+                          onChange={(e) => {
+                            setInlinePin(e.target.value.replace(/[^0-9]/g, ''));
+                            setInlineError(null);
+                          }}
+                          placeholder="e.g. 9457"
+                          className="w-full pl-8 pr-3 py-2 rounded-xl bg-black/30 text-white placeholder-amber-200/40 font-mono font-bold text-xs tracking-wider border border-white/20 focus:border-amber-300 focus:outline-none transition"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={inlinePin.length !== 4 || inlineLoading}
+                        className="py-2 px-4 rounded-xl font-bold text-xs text-stone-900 bg-amber-400 hover:bg-amber-300 active:scale-95 transition shadow-xs disabled:opacity-40 cursor-pointer flex items-center justify-center gap-1 shrink-0"
+                      >
+                        {inlineLoading ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <span>Track PIN</span>
+                        )}
+                      </button>
+                    </form>
+
+                    {/* Inline Error Message */}
+                    {inlineError && (
+                      <div className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold bg-rose-950/70 text-rose-200 border border-rose-400/40 px-3 py-1.5 rounded-xl backdrop-blur-xs">
+                        <AlertCircle className="w-3.5 h-3.5 text-rose-300 shrink-0" />
+                        <span>{inlineError}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -273,16 +351,32 @@ export default function CustomerDashboard() {
               </div>
 
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1">
-                <span className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span
+                  className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                    shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'
+                  }`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${
+                      shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                    }`}
+                  />
                   Chakki Status
                 </span>
                 <div className="pt-0.5">
-                  <span className="text-lg sm:text-xl font-black text-emerald-800">
-                    Operational & Running
+                  <span
+                    className={`text-lg sm:text-xl font-black ${
+                      shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-900'
+                    }`}
+                  >
+                    {shopStatus.isOpen ? 'Operational & Running' : 'Closed for the Night'}
                   </span>
                 </div>
-                <p className="text-[11px] text-stone-600 font-medium">Fresh bags currently being ground</p>
+                <p className="text-[11px] text-stone-600 font-medium">
+                  {shopStatus.isOpen
+                    ? `Hours: ${shopStatus.formattedHours}`
+                    : `Opens ${shopStatus.formattedNextOpen}`}
+                </p>
               </div>
 
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1">
@@ -295,7 +389,7 @@ export default function CustomerDashboard() {
                     15 – 25 Minutes
                   </span>
                 </div>
-                <p className="text-[11px] text-stone-600 font-medium">Ready for pickup at counter</p>
+                <p className="text-[11px] text-stone-600 font-medium">Fast live stone rotation</p>
               </div>
             </section>
 
@@ -309,7 +403,7 @@ export default function CustomerDashboard() {
                   How Your Flour is Milled & Tracked
                 </h3>
                 <p className="text-xs text-stone-600">
-                  From grain weighing to hot stone grinding, follow every milestone transparently.
+                  From grain weighing to cold stone grinding, follow every milestone transparently.
                 </p>
               </div>
 
@@ -318,120 +412,106 @@ export default function CustomerDashboard() {
                   <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-sm">
                     <Scale className="w-5 h-5 text-amber-700" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-stone-900">1. Weighed & Logged</h4>
-                    <p className="text-xs text-stone-600 font-medium mt-1 leading-relaxed">
-                      Grain is weighed digitally, price is confirmed, and a unique 4-digit PIN is issued.
-                    </p>
-                  </div>
+                  <h4 className="font-bold text-sm text-stone-900">1. Weighed & Logged</h4>
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    Wheat is weighed on digital scales and a 4-digit PIN is assigned to your bag.
+                  </p>
                 </div>
 
                 <div className="bg-stone-50/70 rounded-2xl p-4 border border-stone-200/80 space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-800 flex items-center justify-center font-black text-sm">
-                    <Flame className="w-5 h-5 text-orange-700" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-sm">
+                    <Flame className="w-5 h-5 text-amber-700" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-stone-900">2. Cold-Stone Milling</h4>
-                    <p className="text-xs text-stone-600 font-medium mt-1 leading-relaxed">
-                      Traditional slow stone chakki rotation grinds wheat without heating or nutrient loss.
-                    </p>
-                  </div>
+                  <h4 className="font-bold text-sm text-stone-900">2. Cold-Stone Milling</h4>
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    Traditional heavy chakki stones rotate slowly to preserve bran vitamins and wheat germ oils.
+                  </p>
                 </div>
 
                 <div className="bg-stone-50/70 rounded-2xl p-4 border border-stone-200/80 space-y-2">
-                  <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-black text-sm">
-                    <ShoppingBag className="w-5 h-5 text-teal-700" />
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-black text-sm">
+                    <ShoppingBag className="w-5 h-5 text-amber-700" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-stone-900">3. Hygienic Packaging</h4>
-                    <p className="text-xs text-stone-600 font-medium mt-1 leading-relaxed">
-                      Flour is cooled, weighed, and sealed in clean bags with your pickup slip ready.
-                    </p>
-                  </div>
+                  <h4 className="font-bold text-sm text-stone-900">3. Sealed & Stored</h4>
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    Fresh flour is immediately packed in food-grade packaging ready for collection.
+                  </p>
                 </div>
 
                 <div className="bg-stone-50/70 rounded-2xl p-4 border border-stone-200/80 space-y-2">
                   <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-black text-sm">
                     <CheckCircle2 className="w-5 h-5 text-emerald-700" />
                   </div>
-                  <div>
-                    <h4 className="text-sm font-extrabold text-stone-900">4. Instant Counter Pickup</h4>
-                    <p className="text-xs text-stone-600 font-medium mt-1 leading-relaxed">
-                      Receive live notification on your phone. Show pickup QR at counter for instant handover.
-                    </p>
-                  </div>
+                  <h4 className="font-bold text-sm text-stone-900">4. Instant Counter Pickup</h4>
+                  <p className="text-xs text-stone-600 leading-relaxed">
+                    Show your pickup QR code at the counter for 1-second handover.
+                  </p>
                 </div>
               </div>
             </section>
 
-            {/* 4. "Why Traditional Stone-Ground?" Quality Trust Badges */}
-            <section className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-2xl p-5 border border-stone-200 shadow-2xs space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center">
-                  <Wheat className="w-4 h-4" />
-                </div>
-                <h4 className="text-sm font-extrabold text-stone-900">100% Whole Wheat</h4>
-                <p className="text-xs text-stone-600 leading-relaxed font-medium">
-                  We never strip the wheat bran or germ. You get full natural dietary fiber and minerals.
-                </p>
+            {/* 4. Trust Badges */}
+            <section className="bg-stone-900 rounded-3xl p-6 sm:p-8 text-white space-y-4">
+              <div className="text-center max-w-lg mx-auto space-y-1">
+                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-widest">
+                  Why Stone-Ground Chakki Flour?
+                </span>
+                <h3 className="text-lg sm:text-xl font-black">Pure Wheat. Maximum Nutrition.</h3>
               </div>
 
-              <div className="bg-white rounded-2xl p-5 border border-stone-200 shadow-2xs space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                <div className="p-4 bg-stone-800/80 rounded-2xl border border-stone-700/60 text-center space-y-1.5">
+                  <ShieldCheck className="w-6 h-6 text-amber-400 mx-auto" />
+                  <h5 className="font-bold text-sm">100% Whole Wheat</h5>
+                  <p className="text-xs text-stone-400">Zero maida, zero starch dilution. 100% genuine wheat grain.</p>
                 </div>
-                <h4 className="text-sm font-extrabold text-stone-900">Zero Preservatives</h4>
-                <p className="text-xs text-stone-600 leading-relaxed font-medium">
-                  Pure unadulterated flour ground fresh before your eyes, free from chemicals or bleaches.
-                </p>
-              </div>
 
-              <div className="bg-white rounded-2xl p-5 border border-stone-200 shadow-2xs space-y-2">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center">
-                  <ShieldCheck className="w-4 h-4" />
+                <div className="p-4 bg-stone-800/80 rounded-2xl border border-stone-700/60 text-center space-y-1.5">
+                  <Sparkles className="w-6 h-6 text-amber-400 mx-auto" />
+                  <h5 className="font-bold text-sm">Zero Preservatives</h5>
+                  <p className="text-xs text-stone-400">Freshly milled on demand. No chemical bleaches or shelf stabilizers.</p>
                 </div>
-                <h4 className="text-sm font-extrabold text-stone-900">Zero Queue Waiting</h4>
-                <p className="text-xs text-stone-600 leading-relaxed font-medium">
-                  Track from home, market, or car. Arrive right when your fresh bag is ground and ready.
-                </p>
+
+                <div className="p-4 bg-stone-800/80 rounded-2xl border border-stone-700/60 text-center space-y-1.5">
+                  <Clock className="w-6 h-6 text-amber-400 mx-auto" />
+                  <h5 className="font-bold text-sm">Zero Queue Waiting</h5>
+                  <p className="text-xs text-stone-400">Drop your wheat, track from home, and collect the moment it is ready.</p>
+                </div>
               </div>
             </section>
           </div>
         )}
 
-        {/* State 2: When user has ACTIVE ORDERS, they take full priority at the top! */}
+        {/* State 2: HAS active orders - Active Tracking Feed */}
         {hasActiveOrders && (
-          <section className="space-y-4">
-            {/* Mobile-bulletproof header row */}
-            <div className="flex items-center justify-between gap-2 pb-1">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <h2 className="text-base font-black text-stone-900 truncate">
-                  Order Progress
+          <div className="space-y-6">
+            {/* Header info & Add Bag trigger */}
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <h2 className="text-base sm:text-lg font-black text-stone-900 tracking-tight">
+                  Your Active Order{activeOrders.length > 1 ? 's' : ''} ({activeOrders.length})
                 </h2>
-                {activeOrders.length > 1 && (
-                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
-                    {activeOrders.length} Bags
-                  </span>
-                )}
               </div>
 
               <button
+                type="button"
                 onClick={() => setIsAddBagModalOpen(true)}
-                className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200/90 px-3 py-1.5 rounded-xl transition shrink-0 cursor-pointer whitespace-nowrap shadow-xs"
+                className="py-2 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
               >
-                <Plus className="w-3.5 h-3.5" />
+                <Plus className="w-4 h-4" />
                 <span>Add Bag</span>
               </button>
             </div>
 
-            {/* Active Order Card(s) */}
-            <div className="space-y-4">
+            {/* Active Order Card(s) with Settings passed */}
+            <div className="space-y-5">
               <AnimatePresence>
                 {activeOrders.map((order, idx) => (
                   <OrderCard
                     key={order.id}
                     order={order}
+                    settings={settings}
                     currency={currency}
                     bagIndex={idx}
                     totalActiveCount={activeOrders.length}
@@ -441,22 +521,52 @@ export default function CustomerDashboard() {
               </AnimatePresence>
             </div>
 
-            {/* Discreet helper to add another bag */}
+            {/* Helper to track another bag */}
             <div className="pt-2 text-center">
               <button
-                onClick={() => setIsAddBagModalOpen(true)}
-                className="text-xs font-semibold text-stone-500 hover:text-amber-700 inline-flex items-center gap-1.5 transition cursor-pointer"
+                type="button"
+                onClick={() => setIsScanModalOpen(true)}
+                className="text-xs text-amber-800 hover:text-amber-950 font-bold underline underline-offset-4 cursor-pointer"
               >
-                <Wheat className="w-3.5 h-3.5" />
-                Have another bag of wheat? Track another order
+                Have another token or slip? Scan or Enter PIN
               </button>
             </div>
-          </section>
+          </div>
+        )}
+
+        {/* Past Orders Toggle */}
+        {pastOrders.length > 0 && (
+          <div className="pt-4 border-t border-stone-200">
+            <button
+              onClick={() => setShowHistory(!showHistory)}
+              className="w-full py-3 px-4 rounded-2xl bg-white border border-stone-200 text-stone-700 text-xs font-bold hover:bg-stone-50 transition flex items-center justify-between cursor-pointer"
+            >
+              <span className="flex items-center gap-2">
+                <History className="w-4 h-4 text-stone-400" />
+                <span>Recently Completed Orders ({pastOrders.length})</span>
+              </span>
+              <span>{showHistory ? '▲ Hide' : '▼ Show'}</span>
+            </button>
+
+            {showHistory && (
+              <div className="mt-4 space-y-3">
+                {pastOrders.map((order) => (
+                  <OrderCard
+                    key={order.id}
+                    order={order}
+                    settings={settings}
+                    currency={currency}
+                    onRemove={removeOrderId}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-stone-200/80 bg-white/50 py-4 px-4 sm:px-8 text-center text-xs text-stone-500">
+      <footer className="mt-12 py-6 px-4 border-t border-stone-200 bg-white/60 text-stone-600 text-xs text-center font-medium">
         <div className="max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-between">
           <span>{shopName} • Fresh Stone Ground Atta</span>
           <span>Live Tracking</span>

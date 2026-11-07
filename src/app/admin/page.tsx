@@ -9,6 +9,7 @@ import NewOrderModal from '@/components/admin/NewOrderModal';
 import TokenReceiptModal from '@/components/admin/TokenReceiptModal';
 import AdminQRScannerModal from '@/components/admin/AdminQRScannerModal';
 import { formatWeight } from '@/lib/utils';
+import { useShopOperatingStatus } from '@/lib/utils/shopHours';
 import {
   Wheat,
   Plus,
@@ -297,6 +298,7 @@ export default function AdminDashboardPage() {
 
   const currency = settings?.currency || 'Rs.';
   const currentRate = settings?.rate_per_kg || 15;
+  const shopStatus = useShopOperatingStatus(settings);
 
   return (
     <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between pb-24">
@@ -315,9 +317,23 @@ export default function AdminDashboardPage() {
                 <span className="text-[10px] font-bold uppercase bg-stone-100 text-stone-600 px-2 py-0.5 rounded-md">
                   Admin
                 </span>
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 ${
+                    shopStatus.isOpen
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-amber-50 text-amber-800 border border-amber-200'
+                  }`}
+                >
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full ${
+                      shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                    }`}
+                  />
+                  <span>{shopStatus.isOpen ? 'Open' : 'Closed'}</span>
+                </span>
               </div>
               <p className="text-[11px] text-stone-500">
-                Rate: {currency} {Number(currentRate).toFixed(0)}/kg
+                Rate: {currency} {Number(currentRate).toFixed(0)}/kg • Hours: {shopStatus.formattedHours}
               </p>
             </div>
           </div>
