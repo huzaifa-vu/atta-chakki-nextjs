@@ -563,9 +563,9 @@ export default function CustomerDashboard() {
           )
         )}
 
-        {/* Past Orders Toggle */}
+        {/* Past Orders Toggle (Always at the very end of the page) */}
         {pastOrders.length > 0 && (
-          <div className="pt-4 border-t border-stone-200">
+          <div className="order-last pt-4 border-t border-stone-200">
             <button
               onClick={() => setShowHistory(!showHistory)}
               className="w-full py-3 px-4 rounded-2xl bg-white border border-stone-200 text-stone-700 text-xs font-bold hover:bg-stone-50 transition flex items-center justify-between cursor-pointer"
