@@ -219,52 +219,44 @@ export default function OrderCard({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.3 }}
-      className={`relative overflow-hidden rounded-3xl bg-white border transition-all duration-300 ${
-        isReady
-          ? effectiveClosedState
-            ? 'border-amber-200/90 ring-2 ring-amber-100/60 shadow-lg shadow-amber-500/5'
-            : 'border-emerald-400 ring-4 ring-emerald-100 shadow-xl shadow-emerald-500/10'
-          : isGrinding
-          ? 'border-amber-300 ring-2 ring-amber-100 shadow-md shadow-amber-500/5'
-          : isCompleted
-          ? 'border-stone-200 bg-stone-50/50 opacity-90'
-          : 'border-amber-200/90 shadow-md shadow-amber-500/5'
-      }`}
+      className="relative overflow-hidden rounded-3xl bg-white border border-stone-200/90 shadow-2xs transition-all duration-300"
     >
       {/* 1. Header Banner for Ready State */}
       {isReady && (
         <>
           {effectiveClosedState ? (
-            /* Night / Break Closed Header - Bright & Light */
-            <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 px-5 sm:px-6 py-3.5 text-stone-900 flex items-center justify-between border-b border-amber-200/80 shadow-2xs">
+            /* Night / Break Closed Header - Clean Stone & Soft Amber */
+            <div className="bg-stone-50 border-b border-stone-200/70 px-5 sm:px-6 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-lg bg-amber-100/80 text-amber-800 flex items-center justify-center shrink-0">
                   {shopStatus.isBreakActive ? (
                     <Coffee className="w-3.5 h-3.5" />
                   ) : (
                     <Moon className="w-3.5 h-3.5" />
                   )}
                 </div>
-                <span className="text-xs sm:text-sm font-black tracking-tight text-stone-900">
+                <span className="text-xs sm:text-sm font-bold text-stone-800">
                   {shopStatus.isBreakActive
                     ? `Flour Ready • ${shopStatus.breakLabel || 'Break'}`
                     : 'Flour Ready & Stored Safely'}
                 </span>
               </div>
-              <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-0.5 rounded-full">
                 {shopStatus.isBreakActive ? 'Break Time' : 'Counter Closed'}
               </span>
             </div>
           ) : (
             /* Open / Immediate Pickup Header */
-            <div className="bg-gradient-to-r from-emerald-600 to-teal-600 px-5 sm:px-6 py-3.5 text-white flex items-center justify-between shadow-xs">
+            <div className="bg-emerald-50 border-b border-emerald-100 px-5 sm:px-6 py-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 shrink-0 animate-spin" style={{ animationDuration: '3s' }} />
-                <span className="text-xs sm:text-sm font-extrabold tracking-wide">
+                <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-emerald-950">
                   Flour Ready for Collection!
                 </span>
               </div>
-              <span className="text-xs bg-white text-emerald-800 font-extrabold px-3 py-1 rounded-full shadow-2xs">
+              <span className="text-[10px] font-bold uppercase tracking-wider bg-white text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full shadow-2xs">
                 Counter Ready
               </span>
             </div>
@@ -278,38 +270,38 @@ export default function OrderCard({
           <div className="space-y-1">
             <div className="flex items-center gap-2 flex-wrap">
               {totalActiveCount > 1 && bagIndex !== undefined && (
-                <span className="text-xs font-black uppercase text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-300 flex items-center gap-1">
-                  <Wheat className="w-3.5 h-3.5 text-amber-700" />
+                <span className="text-xs font-bold uppercase text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200 flex items-center gap-1">
+                  <Wheat className="w-3.5 h-3.5 text-amber-600" />
                   Bag {bagIndex + 1}
                 </span>
               )}
 
               {order.is_paid ? (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Paid
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Paid
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-amber-800 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-stone-600 bg-stone-100 px-2.5 py-0.5 rounded-lg border border-stone-200">
                   <Clock className="w-3.5 h-3.5 text-amber-600" /> Pay on Pickup
                 </span>
               )}
             </div>
 
-            <h3 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight pt-0.5">
+            <h3 className="text-lg sm:text-xl font-bold text-stone-900 tracking-tight pt-0.5">
               {order.customer_name ? order.customer_name : 'Whole Wheat Flour'}
             </h3>
-            <p suppressHydrationWarning className="text-xs text-stone-500 font-medium">
+            <p suppressHydrationWarning className="text-xs text-stone-500 font-normal">
               Received at {formatDate(order.created_at)}
             </p>
           </div>
 
           {/* 4-digit PIN badge */}
           {!isCompleted && order.access_code && (
-            <div className="bg-stone-900 text-white rounded-2xl px-3.5 py-2 text-center shadow-md shrink-0">
-              <span className="block text-[9px] font-bold text-amber-300 uppercase tracking-widest">
+            <div className="bg-stone-900 text-white rounded-2xl px-4 py-2 text-center shadow-xs shrink-0">
+              <span className="block text-[9px] font-bold text-amber-400 uppercase tracking-widest">
                 PIN
               </span>
-              <span className="block text-xl sm:text-2xl font-mono font-black tracking-widest text-white leading-tight">
+              <span className="block text-xl sm:text-2xl font-mono font-bold tracking-widest text-white leading-tight">
                 {order.access_code}
               </span>
             </div>
@@ -336,15 +328,9 @@ export default function OrderCard({
         {isReady ? (
           <div className="space-y-3.5">
             {/* Unified Clean Pickup Ticket Card */}
-            <div
-              className={`p-4 sm:p-5 rounded-2xl text-center flex flex-col items-center justify-center space-y-3.5 border ${
-                effectiveClosedState
-                  ? 'bg-amber-50/40 border-amber-200/70'
-                  : 'bg-emerald-50/70 border-emerald-300/80'
-              }`}
-            >
+            <div className="p-4 sm:p-5 rounded-2xl text-center flex flex-col items-center justify-center space-y-3 bg-stone-50/80 border border-stone-200/80">
               {/* QR Code Container */}
-              <div className="relative p-3.5 bg-white rounded-2xl shadow-sm border border-stone-200 flex items-center justify-center">
+              <div className="relative p-3 bg-white rounded-2xl shadow-xs border border-stone-200/80 flex items-center justify-center">
                 <div
                   className={
                     effectiveClosedState
@@ -354,7 +340,7 @@ export default function OrderCard({
                 >
                   <QRCodeSVG
                     value={trackingUrl}
-                    size={152}
+                    size={148}
                     level="M"
                     includeMargin={false}
                   />
@@ -366,8 +352,8 @@ export default function OrderCard({
                     data-no-capture="true"
                     className="absolute inset-0 flex items-center justify-center pointer-events-none"
                   >
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white shadow-md border-2 border-white flex items-center justify-center">
-                      <Lock className="w-6 h-6" />
+                    <div className="w-11 h-11 rounded-xl bg-amber-500 text-white shadow-sm border-2 border-white flex items-center justify-center">
+                      <Lock className="w-5 h-5" />
                     </div>
                   </div>
                 )}
@@ -375,25 +361,17 @@ export default function OrderCard({
 
               {/* QR Status Label */}
               <div>
-                <span
-                  className={`text-xs font-black flex items-center justify-center gap-1.5 ${
-                    effectiveClosedState ? 'text-amber-950' : 'text-emerald-950'
-                  }`}
-                >
+                <span className="text-xs font-bold text-stone-800 flex items-center justify-center gap-1.5">
                   {effectiveClosedState ? (
-                    <Lock className="w-4 h-4 text-amber-700" />
+                    <Lock className="w-3.5 h-3.5 text-amber-600" />
                   ) : (
                     <QrCode className="w-4 h-4 text-emerald-700" />
                   )}
                   Pickup QR Code {effectiveClosedState && '(Locked)'}
                 </span>
-                <p
-                  className={`text-[11px] font-medium mt-0.5 ${
-                    effectiveClosedState ? 'text-stone-600' : 'text-emerald-800'
-                  }`}
-                >
+                <p className="text-xs text-stone-500 font-normal mt-0.5">
                   {effectiveClosedState
-                    ? 'Chakki is currently closed • QR unlocks when doors open'
+                    ? 'QR unlocks automatically when chakki counter opens'
                     : 'Show this QR at the counter to collect your flour'}
                 </p>
               </div>
@@ -402,24 +380,24 @@ export default function OrderCard({
               {effectiveClosedState && (
                 <div
                   data-no-capture="true"
-                  className="w-full bg-white rounded-xl p-3 sm:p-3.5 border border-amber-200/90 shadow-2xs flex items-center justify-between gap-3 text-left"
+                  className="w-full bg-white rounded-xl p-3 sm:p-3.5 border border-stone-200/80 shadow-2xs flex items-center justify-between gap-3 text-left"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center shrink-0">
                       <Clock className="w-4 h-4 text-amber-700" />
                     </div>
                     <div className="min-w-0">
-                      <span className="block text-[10px] font-black uppercase tracking-wider text-amber-900 leading-none truncate">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 leading-none truncate">
                         {shopStatus.isBreakActive ? 'Break Ends In' : 'Counter Opens In'}
                       </span>
-                      <span className="block text-[11px] font-semibold text-stone-600 mt-1 leading-none truncate">
+                      <span className="block text-xs font-semibold text-stone-700 mt-1 leading-none truncate">
                         Opens {shopStatus.formattedNextOpen}
                       </span>
                     </div>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="font-mono text-sm sm:text-base font-black text-amber-950 tracking-wider">
+                    <span className="font-mono text-sm sm:text-base font-bold text-stone-900 tracking-wider">
                       {countdown.formattedString}
                     </span>
                   </div>
@@ -428,22 +406,22 @@ export default function OrderCard({
             </div>
 
             {/* Price & Summary Details Card */}
-            <div className="grid grid-cols-3 gap-2 bg-stone-50 rounded-2xl p-3 border border-stone-200/80 text-center">
+            <div className="grid grid-cols-3 gap-2 bg-stone-50/80 rounded-2xl p-3 border border-stone-200/80 text-center">
               <div>
-                <span className="block text-[11px] font-medium text-stone-500">Weight</span>
-                <span className="block text-sm sm:text-base font-black text-stone-900 mt-0.5">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-500">Weight</span>
+                <span className="block text-sm sm:text-base font-bold text-stone-900 mt-0.5">
                   {formatWeight(order.weight_kg)}
                 </span>
               </div>
               <div className="border-x border-stone-200">
-                <span className="block text-[11px] font-medium text-stone-500">Rate</span>
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-500">Rate</span>
                 <span className="block text-sm sm:text-base font-bold text-stone-900 mt-0.5">
                   {currency} {Number(order.rate_per_kg).toFixed(0)}/kg
                 </span>
               </div>
               <div>
-                <span className="block text-[11px] font-medium text-stone-500">Total</span>
-                <span className="block text-sm sm:text-base font-black text-amber-600 mt-0.5">
+                <span className="block text-[11px] font-bold uppercase tracking-wider text-stone-500">Total</span>
+                <span className="block text-sm sm:text-base font-bold text-amber-600 mt-0.5">
                   {formatPrice(order.total_price, currency)}
                 </span>
               </div>
@@ -457,11 +435,7 @@ export default function OrderCard({
                   type="button"
                   onClick={handleShareCard}
                   disabled={isSharing || isSaving}
-                  className={`w-full py-3 px-4 rounded-xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-xs active:scale-98 cursor-pointer disabled:opacity-60 text-white ${
-                    showClosedState
-                      ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'
-                      : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
-                  }`}
+                  className="w-full py-2.5 sm:py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-xs active:scale-98 cursor-pointer disabled:opacity-60 text-white bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
                   title="Share pickup slip image with someone on WhatsApp or other apps"
                 >
                   {isSharing ? (
@@ -477,7 +451,7 @@ export default function OrderCard({
                   type="button"
                   onClick={handleSaveCard}
                   disabled={isSharing || isSaving}
-                  className="w-full py-3 px-4 rounded-xl bg-stone-100 hover:bg-stone-200 active:scale-98 text-stone-800 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition border border-stone-200/90 cursor-pointer disabled:opacity-60"
+                  className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-white hover:bg-stone-50 active:scale-98 text-stone-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition border border-stone-200 shadow-2xs cursor-pointer disabled:opacity-60"
                   title="Download card image to phone or computer gallery"
                 >
                   {isSaving ? (

@@ -294,39 +294,29 @@ export default function CustomerDashboard() {
           onChange={handleImageUpload}
         />
 
-        {/* 1. At-A-Glance Dashboard Stat Cards (Compact 2-col on mobile, 3-col on desktop) */}
+        {/* 1. At-A-Glance Dashboard Stat Cards (Unified White Surface, Matching Stone Borders, Cohesive Typography) */}
         <section
           className={`grid grid-cols-2 ${
             hasPhoneNumber ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
           } gap-2.5 sm:gap-4`}
         >
-          {/* Card 1: Chakki Status (Full width on mobile, 1-col on desktop) */}
-          <div
-            className={`col-span-2 sm:col-span-1 rounded-2xl p-3.5 sm:p-5 border transition shadow-2xs space-y-2 ${
-              shopStatus.isOpen
-                ? 'bg-gradient-to-br from-emerald-50/40 via-white to-white border-emerald-200/80'
-                : 'bg-gradient-to-br from-amber-50/50 via-white to-white border-amber-200/80'
-            }`}
-          >
+          {/* Card 1: Chakki Status */}
+          <div className="col-span-2 sm:col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 border border-stone-200/80 shadow-2xs space-y-2 flex flex-col justify-between">
             <div className="flex items-center justify-between">
-              <span
-                className={`text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
-                  shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'
-                }`}
-              >
+              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
                 <span
                   className={`w-2 h-2 rounded-full ${
                     shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                   }`}
                 />
-                Chakki Status
+                <span>Chakki Status</span>
               </span>
 
               <span
-                className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full ${
                   shopStatus.isOpen
-                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-300/80'
-                    : 'bg-amber-100 text-amber-900 border border-amber-300/80'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-amber-50 text-amber-800 border border-amber-200'
                 }`}
               >
                 {shopStatus.isOpen
@@ -340,25 +330,25 @@ export default function CustomerDashboard() {
             <div className="pt-0.5">
               {shopStatus.isOpen ? (
                 <div>
-                  <span className="text-base sm:text-xl font-black text-emerald-950 block leading-tight">
-                    Operational & Milling
+                  <span className="text-xl sm:text-2xl font-bold text-stone-900 block leading-tight">
+                    Milling Active
                   </span>
-                  <p className="text-[11px] text-emerald-800/80 font-semibold mt-1">
+                  <p className="text-xs text-stone-500 font-normal mt-1">
                     Today: {shopStatus.formattedHours}
                   </p>
                 </div>
               ) : (
-                <div className="flex flex-col sm:block">
+                <div>
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="text-xl sm:text-2xl font-black text-amber-950 font-mono tracking-tight">
+                    <span className="text-xl sm:text-2xl font-bold font-mono text-stone-900 tracking-tight">
                       {countdown.formattedString}
                     </span>
-                    <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wide">
+                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
                       until open
                     </span>
                   </div>
-                  <p className="text-[11px] text-stone-600 font-semibold mt-0.5 sm:mt-1 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                  <p className="text-xs text-stone-500 font-normal mt-1 flex items-center gap-1">
+                    <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                     <span>Reopens {shopStatus.formattedNextOpen}</span>
                   </p>
                 </div>
@@ -366,63 +356,69 @@ export default function CustomerDashboard() {
             </div>
           </div>
 
-          {/* Card 2: Milling Rate (Left half on mobile, 1-col on desktop) */}
-          <div className="col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 border border-stone-200/80 shadow-2xs space-y-1.5 sm:space-y-2 flex flex-col justify-between">
-            <span className="text-[10px] sm:text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-              <Wheat className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-              <span>Milling Rate</span>
-            </span>
-            <div className="flex items-baseline gap-1 pt-0.5">
-              <span className="text-xl sm:text-2xl font-black text-stone-900 leading-none">
-                {currency} {displayRate}
+          {/* Card 2: Milling Rate */}
+          <div className="col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 border border-stone-200/80 shadow-2xs space-y-2 flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5">
+                <Wheat className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span>Milling Rate</span>
               </span>
-              <span className="text-[11px] sm:text-xs text-stone-500 font-bold">/ kg</span>
+              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200">
+                Stone Ground
+              </span>
             </div>
-            <p className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate mt-0.5">
-              Whole wheat grinding
-            </p>
+            <div>
+              <div className="flex items-baseline gap-1 pt-0.5">
+                <span className="text-xl sm:text-2xl font-bold text-stone-900 leading-none">
+                  {currency} {displayRate}
+                </span>
+                <span className="text-xs text-stone-500 font-semibold">/ kg</span>
+              </div>
+              <p className="text-xs text-stone-500 font-normal mt-1 truncate">
+                100% whole wheat cold-milled
+              </p>
+            </div>
           </div>
 
-          {/* Card 3: Counter Phone Contact (Right half on mobile, 1-col on desktop) */}
+          {/* Card 3: Counter Phone Contact */}
           {hasPhoneNumber && (
-            <div className="col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 border border-stone-200/80 shadow-2xs space-y-1.5 sm:space-y-2 flex flex-col justify-between hover:border-amber-300 transition group">
-              <div>
-                <div className="flex items-center justify-between gap-1">
-                  <span className="text-[10px] sm:text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5 truncate">
-                    <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span>Helpline</span>
-                  </span>
-                  <span className="text-[9px] sm:text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/80 px-1.5 sm:px-2.5 py-0.5 rounded-full shrink-0">
-                    Call
-                  </span>
-                </div>
+            <div className="col-span-1 bg-white rounded-2xl p-3.5 sm:p-5 border border-stone-200/80 shadow-2xs space-y-2 flex flex-col justify-between hover:border-amber-300 transition group">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5 truncate">
+                  <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Helpline</span>
+                </span>
+                <span className="text-[10px] font-bold uppercase bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
+                  Direct Call
+                </span>
+              </div>
 
-                <div className="pt-1.5">
+              <div>
+                <div className="pt-0.5">
                   <a
                     href={`tel:${settings?.phone_number}`}
-                    className="inline-flex items-center gap-1.5 text-xs xs:text-sm sm:text-lg font-black text-stone-900 group-hover:text-amber-700 transition tracking-tight truncate w-full"
+                    className="inline-flex items-center gap-1.5 text-sm xs:text-base sm:text-lg font-bold text-stone-900 group-hover:text-amber-700 transition tracking-tight truncate w-full"
                   >
                     <PhoneCall className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition" />
                     <span className="truncate">{formatPhoneNumber(settings?.phone_number)}</span>
                   </a>
                 </div>
+                <p className="text-xs text-stone-500 font-normal mt-1 truncate">
+                  Tap for instant counter call
+                </p>
               </div>
-
-              <p className="text-[10px] sm:text-[11px] text-stone-500 font-medium truncate mt-0.5">
-                Tap for instant call
-              </p>
             </div>
           )}
         </section>
 
         {/* 2. Main Content Area: Active Orders Feed OR Tracking Console */}
         {hasActiveOrders ? (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {/* Header info & Add Bag trigger */}
-            <div className="flex items-center justify-between pb-1">
+            <div className="flex items-center justify-between pb-0.5">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                <h2 className="text-base sm:text-lg font-black text-stone-900 tracking-tight">
+                <Wheat className="w-4 h-4 text-amber-600" />
+                <h2 className="text-base sm:text-lg font-bold text-stone-900 tracking-tight">
                   Your Active Order{activeOrders.length > 1 ? 's' : ''} ({activeOrders.length})
                 </h2>
               </div>
@@ -430,9 +426,9 @@ export default function CustomerDashboard() {
               <button
                 type="button"
                 onClick={() => setIsAddBagModalOpen(true)}
-                className="py-2 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                className="inline-flex items-center gap-1.5 py-1.5 sm:py-2 px-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-xs shadow-xs transition active:scale-98 cursor-pointer"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-3.5 h-3.5" />
                 <span>Add Bag</span>
               </button>
             </div>

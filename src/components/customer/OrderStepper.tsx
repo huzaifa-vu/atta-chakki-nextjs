@@ -113,17 +113,19 @@ export default function OrderStepper({ status, compact = false }: OrderStepperPr
                 ) : isCurrent ? (
                   <span
                     className={`w-1.5 h-1.5 rounded-full ${
-                      isReady ? 'bg-emerald-500 animate-ping' : 'bg-amber-500 animate-ping'
+                      isReady ? 'bg-emerald-600' : 'bg-amber-600'
                     }`}
                   />
                 ) : null}
                 <span
-                  className={`text-[10px] sm:text-[11px] font-bold tracking-tight text-center truncate ${
+                  className={`text-[11px] tracking-tight text-center truncate ${
                     isCurrent
-                      ? 'text-stone-900 font-extrabold'
+                      ? isReady
+                        ? 'text-emerald-800 font-bold'
+                        : 'text-amber-800 font-bold'
                       : isDone
-                      ? 'text-emerald-700'
-                      : 'text-stone-600'
+                      ? 'text-emerald-700 font-medium'
+                      : 'text-stone-400 font-normal'
                   }`}
                 >
                   {step.shortLabel}
