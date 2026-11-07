@@ -276,10 +276,10 @@ export default function CustomerDashboard() {
       </AnimatePresence>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-7 space-y-5 sm:space-y-6">
+      <main className="flex-1 max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-7 flex flex-col gap-5 sm:gap-6">
         {/* Loading Indicator */}
         {loading && (
-          <div className="p-10 text-center bg-white rounded-3xl border border-stone-200/80 shadow-2xs space-y-3">
+          <div className="order-first p-10 text-center bg-white rounded-3xl border border-stone-200/80 shadow-2xs space-y-3">
             <Loader2 className="w-7 h-7 animate-spin text-amber-600 mx-auto" />
             <p className="text-xs font-semibold text-stone-500">Connecting to live chakki updates...</p>
           </div>
@@ -294,9 +294,9 @@ export default function CustomerDashboard() {
           onChange={handleImageUpload}
         />
 
-        {/* 1. At-A-Glance Dashboard Stat Cards (Unified White Surface, Matching Stone Borders, Cohesive Typography) */}
+        {/* 1. At-A-Glance Dashboard Stat Cards (order-2 on mobile = below active order; sm:order-1 on desktop) */}
         <section
-          className={`grid grid-cols-2 ${
+          className={`order-2 sm:order-1 grid grid-cols-2 ${
             hasPhoneNumber ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
           } gap-2.5 sm:gap-4`}
         >
@@ -411,9 +411,9 @@ export default function CustomerDashboard() {
           )}
         </section>
 
-        {/* 2. Main Content Area: Active Orders Feed OR Tracking Console */}
+        {/* 2. Main Content Area: Active Orders Feed OR Tracking Console (order-1 on mobile = very top; sm:order-2 on desktop) */}
         {hasActiveOrders ? (
-          <div className="space-y-4">
+          <div className="order-1 sm:order-2 space-y-4">
             {/* Header info & Add Bag trigger */}
             <div className="flex items-center justify-between pb-0.5">
               <div className="flex items-center gap-2">
@@ -452,8 +452,8 @@ export default function CustomerDashboard() {
           </div>
         ) : (
           !loading && (
-            /* Order Tracking Console - Shown ONLY when no active orders are tracked */
-            <section className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/80 shadow-sm space-y-4">
+            /* Order Tracking Console - Shown ONLY when no active orders are tracked (order-1 on mobile, sm:order-2 on desktop) */
+            <section className="order-1 sm:order-2 bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/80 shadow-sm space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-stone-100">
                 <div>
                   <h2 className="text-base sm:text-lg font-black text-stone-900 tracking-tight flex items-center gap-2">
