@@ -325,47 +325,40 @@ export default function OrderCard({
           <div className="space-y-3.5">
             {/* Unified Clean Pickup Ticket Card */}
             <div
-              className={`p-4 sm:p-5 rounded-2xl text-center flex flex-col items-center justify-center space-y-3 border ${
+              className={`p-4 sm:p-5 rounded-2xl text-center flex flex-col items-center justify-center space-y-3.5 border ${
                 showClosedState
                   ? 'bg-amber-50/40 border-amber-200/70'
                   : 'bg-emerald-50/70 border-emerald-300/80'
               }`}
             >
-              <div className="relative p-3.5 bg-white rounded-2xl shadow-sm border border-stone-200 overflow-hidden flex items-center justify-center min-w-[160px] min-h-[160px]">
+              {/* QR Code Container */}
+              <div className="relative p-3.5 bg-white rounded-2xl shadow-sm border border-stone-200 flex items-center justify-center">
                 <div
                   className={
                     showClosedState
-                      ? 'filter blur-[5px] opacity-25 select-none pointer-events-none transition-all'
+                      ? 'filter blur-[1.5px] opacity-60 select-none pointer-events-none transition-all'
                       : 'transition-all'
                   }
                 >
                   <QRCodeSVG
                     value={trackingUrl}
-                    size={146}
+                    size={152}
                     level="M"
                     includeMargin={false}
                   />
                 </div>
 
-                {/* Locked Timer Overlay when store is closed / on break */}
+                {/* Prominent Center Lock Medallion on QR when store is closed */}
                 {showClosedState && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-white/75 backdrop-blur-[1.5px]">
-                    <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-800 border border-amber-200/90 flex items-center justify-center shadow-2xs mb-1.5">
-                      <Lock className="w-4 h-4 text-amber-700" />
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white shadow-md border-2 border-white flex items-center justify-center">
+                      <Lock className="w-6 h-6" />
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-full mb-1">
-                      {shopStatus.isBreakActive ? 'Break Time' : 'Pickup Locked'}
-                    </span>
-                    <span className="font-mono text-base sm:text-lg font-black text-amber-950 tracking-wider">
-                      {countdown.formattedString}
-                    </span>
-                    <span className="text-[10px] text-stone-500 font-semibold mt-0.5">
-                      Opens {shopStatus.formattedNextOpen}
-                    </span>
                   </div>
                 )}
               </div>
 
+              {/* QR Status Label */}
               <div>
                 <span
                   className={`text-xs font-black flex items-center justify-center gap-1.5 ${
@@ -375,7 +368,7 @@ export default function OrderCard({
                   {showClosedState ? (
                     <Lock className="w-4 h-4 text-amber-700" />
                   ) : (
-                    <QrCode className="w-4 h-4" />
+                    <QrCode className="w-4 h-4 text-emerald-700" />
                   )}
                   Pickup QR Code {showClosedState && '(Locked)'}
                 </span>
@@ -389,6 +382,31 @@ export default function OrderCard({
                     : 'Show this QR at the counter to collect your flour'}
                 </p>
               </div>
+
+              {/* Wide Horizontal Countdown Timer Bar (Spacious, Single-Line, Uncramped) */}
+              {showClosedState && (
+                <div className="w-full bg-white rounded-xl p-3 sm:p-3.5 border border-amber-200/90 shadow-2xs flex items-center justify-between gap-3 text-left">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
+                      <Clock className="w-4 h-4 text-amber-700" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block text-[10px] font-black uppercase tracking-wider text-amber-900 leading-none truncate">
+                        {shopStatus.isBreakActive ? 'Break Ends In' : 'Counter Opens In'}
+                      </span>
+                      <span className="block text-[11px] font-semibold text-stone-600 mt-1 leading-none truncate">
+                        Opens {shopStatus.formattedNextOpen}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="font-mono text-sm sm:text-base font-black text-amber-950 tracking-wider">
+                      {countdown.formattedString}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Price & Summary Details Card */}
