@@ -23,8 +23,6 @@ import {
   Clock,
   ArrowRight,
   AlertCircle,
-  Moon,
-  Coffee,
   Phone,
   PhoneCall,
   ChevronRight,
@@ -211,8 +209,8 @@ export default function CustomerDashboard() {
 
   return (
     <div className="min-h-screen bg-[#fcfbf9] flex flex-col justify-between">
-      {/* Top Header - Bright, Fresh & Modern */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-8 py-3.5 shadow-2xs">
+      {/* Top Header - Clean, Modern Dashboard Navigation */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/80 px-4 sm:px-8 py-3 shadow-2xs">
         <div className="max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto flex items-center justify-between gap-4">
           {/* Left: Brand Identity */}
           <div className="flex items-center gap-3 shrink-0">
@@ -220,7 +218,7 @@ export default function CustomerDashboard() {
               <Wheat className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <h1 className="text-base sm:text-lg font-black text-stone-900 tracking-tight leading-none">
                   {shopName}
                 </h1>
@@ -228,62 +226,13 @@ export default function CustomerDashboard() {
                   className={`inline-block w-2 h-2 rounded-full ${
                     shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                   }`}
+                  title={shopStatus.isOpen ? 'Counter Open' : 'Counter Closed'}
                 />
               </div>
               <p className="text-[11px] sm:text-xs text-stone-500 font-medium mt-0.5">
-                Fresh Stone Ground Atta • Pure & Live
+                Fresh Stone Ground Atta • Live Tracking
               </p>
             </div>
-          </div>
-
-          {/* Center: Live Operating Status & Milling Rate Badge (Desktop & Tablet) */}
-          <div className="hidden md:flex items-center gap-2.5">
-            {/* Live Open/Closed Pill */}
-            <div
-              className={`px-3 py-1.5 rounded-full text-xs font-bold border flex items-center gap-1.5 ${
-                shopStatus.isOpen
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-amber-50 text-amber-800 border-amber-200'
-              }`}
-            >
-              {shopStatus.isBreakActive ? (
-                <>
-                  <Coffee className="w-3.5 h-3.5 text-amber-700" />
-                  <span>{shopStatus.breakLabel || 'Break'}</span>
-                  <span className="text-amber-700/80 font-medium">• Reopens {shopStatus.formattedNextOpen}</span>
-                </>
-              ) : shopStatus.isOpen ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span>Open Now</span>
-                  <span className="text-emerald-700/80 font-medium">• Closes {formatTime12Hour(settings?.closing_time)}</span>
-                </>
-              ) : (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-amber-700" />
-                  <span>Closed</span>
-                  <span className="text-amber-700/80 font-medium">• Opens {shopStatus.formattedNextOpen}</span>
-                </>
-              )}
-            </div>
-
-            {/* Milling Rate Chip */}
-            <div className="px-3 py-1.5 rounded-full bg-stone-100 border border-stone-200 text-xs font-bold text-stone-700 flex items-center gap-1">
-              <span className="text-stone-500 font-medium">Rate:</span>
-              <span className="font-extrabold text-stone-900">{currency} {displayRate}/kg</span>
-            </div>
-
-            {/* Helpline Chip (only if phone added) */}
-            {hasPhoneNumber && (
-              <a
-                href={`tel:${settings?.phone_number}`}
-                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-amber-50 hover:border-amber-300 border border-stone-200 text-xs font-bold text-stone-700 hover:text-amber-800 transition cursor-pointer"
-                title="Call Counter Helpline"
-              >
-                <Phone className="w-3.5 h-3.5 text-amber-600" />
-                <span>{formatPhoneNumber(settings?.phone_number)}</span>
-              </a>
-            )}
           </div>
 
           {/* Right: Quick Actions */}
@@ -292,7 +241,7 @@ export default function CustomerDashboard() {
               <button
                 type="button"
                 onClick={() => setIsAddBagModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs border border-amber-200 transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs border border-amber-200 transition cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Add Bag</span>
@@ -466,116 +415,7 @@ export default function CustomerDashboard() {
           )}
         </section>
 
-        {/* 2. Compact Order Tracking Console */}
-        <section className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/80 shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-stone-100">
-            <div>
-              <h2 className="text-base sm:text-lg font-black text-stone-900 tracking-tight flex items-center gap-2">
-                <Wheat className="w-4 h-4 text-amber-600" />
-                Track Your Grinding Order
-              </h2>
-              <p className="text-xs text-stone-500 font-medium mt-0.5">
-                Scan your counter slip QR, upload a photo of your receipt, or enter your 4-digit PIN.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
-            {/* 1. Camera Scan */}
-            <div className="md:col-span-4">
-              <button
-                type="button"
-                onClick={() => setIsScanModalOpen(true)}
-                className="w-full p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white transition shadow-sm hover:shadow-md shadow-amber-500/20 flex items-center gap-3 text-left font-bold cursor-pointer group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="block text-xs sm:text-sm font-extrabold text-white leading-tight">
-                    Scan Slip QR
-                  </span>
-                  <span className="block text-[11px] font-medium text-amber-100 mt-0.5">
-                    Open camera scanner
-                  </span>
-                </div>
-              </button>
-            </div>
-
-            {/* 2. Upload QR Photo */}
-            <div className="md:col-span-4">
-              <button
-                type="button"
-                disabled={uploadLoading}
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full p-3.5 rounded-2xl bg-amber-50/80 hover:bg-amber-100/90 active:scale-[0.99] border border-amber-200/80 text-amber-950 transition shadow-2xs flex items-center gap-3 text-left font-bold cursor-pointer group disabled:opacity-50"
-              >
-                <div className="w-10 h-10 rounded-xl bg-white border border-amber-200 text-amber-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
-                  {uploadLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
-                  ) : (
-                    <Upload className="w-5 h-5 text-amber-700" />
-                  )}
-                </div>
-                <div>
-                  <span className="block text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">
-                    {uploadLoading ? 'Reading QR...' : 'Upload QR Photo'}
-                  </span>
-                  <span className="block text-[11px] font-medium text-stone-500 mt-0.5">
-                    Select slip from gallery
-                  </span>
-                </div>
-              </button>
-            </div>
-
-            {/* 3. Inline 4-Digit PIN Input Form */}
-            <div className="md:col-span-4">
-              <form
-                onSubmit={handleInlinePinLookup}
-                className="flex items-center gap-2 p-1.5 rounded-2xl bg-stone-50 border border-stone-200/80 focus-within:border-amber-400 focus-within:bg-white transition"
-              >
-                <div className="relative flex-1 pl-2">
-                  <input
-                    type="text"
-                    maxLength={4}
-                    value={inlinePin}
-                    onChange={(e) => {
-                      setInlinePin(e.target.value.replace(/[^0-9]/g, ''));
-                      setInlineError(null);
-                      setActionError(null);
-                    }}
-                    placeholder="PIN: 9457"
-                    className="w-full py-2 bg-transparent text-stone-900 placeholder:text-stone-400 font-mono font-bold text-xs sm:text-sm tracking-widest focus:outline-none"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={inlinePin.length !== 4 || inlineLoading}
-                  className="py-2.5 px-3.5 rounded-xl font-bold text-xs text-amber-950 bg-amber-100 hover:bg-amber-200/80 active:scale-95 transition border border-amber-200/80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs"
-                >
-                  {inlineLoading ? (
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-800" />
-                  ) : (
-                    <>
-                      <span>Track</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-          </div>
-
-          {/* Error Message Feedback */}
-          {(inlineError || actionError) && (
-            <div className="flex items-center gap-2 p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs font-semibold">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-              <span>{inlineError || actionError}</span>
-            </div>
-          )}
-        </section>
-
-        {/* 3. Active Orders Feed OR Sleek Minimal Empty State */}
+        {/* 2. Main Content Area: Active Orders Feed OR Tracking Console */}
         {hasActiveOrders ? (
           <div className="space-y-5">
             {/* Header info & Add Bag trigger */}
@@ -613,33 +453,117 @@ export default function CustomerDashboard() {
                 ))}
               </AnimatePresence>
             </div>
-
-            {/* Helper to track another bag */}
-            <div className="pt-2 text-center">
-              <button
-                type="button"
-                onClick={() => setIsScanModalOpen(true)}
-                className="text-xs text-amber-800 hover:text-amber-950 font-bold underline underline-offset-4 cursor-pointer"
-              >
-                Have another token or slip? Scan or Enter PIN
-              </button>
-            </div>
           </div>
         ) : (
           !loading && (
-            <div className="bg-white rounded-3xl p-8 sm:p-10 border border-stone-200/80 shadow-2xs text-center space-y-3">
-              <div className="w-12 h-12 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200/80 flex items-center justify-center mx-auto shadow-2xs">
-                <Wheat className="w-6 h-6 text-amber-600" />
+            /* Order Tracking Console - Shown ONLY when no active orders are tracked */
+            <section className="bg-white rounded-3xl p-5 sm:p-6 border border-stone-200/80 shadow-sm space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-3 border-b border-stone-100">
+                <div>
+                  <h2 className="text-base sm:text-lg font-black text-stone-900 tracking-tight flex items-center gap-2">
+                    <Wheat className="w-4 h-4 text-amber-600" />
+                    Track Your Grinding Order
+                  </h2>
+                  <p className="text-xs text-stone-500 font-medium mt-0.5">
+                    Scan your counter slip QR, upload a photo of your receipt, or enter your 4-digit PIN.
+                  </p>
+                </div>
               </div>
-              <div className="max-w-sm mx-auto space-y-1">
-                <h3 className="text-base font-extrabold text-stone-900">
-                  No Active Orders in Tracking
-                </h3>
-                <p className="text-xs text-stone-500 font-medium leading-relaxed">
-                  Have a counter token? Use the console above to scan your slip, upload a QR photo, or enter your 4-digit PIN.
-                </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-center">
+                {/* 1. Camera Scan */}
+                <div className="md:col-span-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsScanModalOpen(true)}
+                    className="w-full p-3.5 rounded-2xl bg-amber-500 hover:bg-amber-600 active:scale-[0.99] text-white transition shadow-sm hover:shadow-md shadow-amber-500/20 flex items-center gap-3 text-left font-bold cursor-pointer group"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white/20 text-white flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
+                      <Camera className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <span className="block text-xs sm:text-sm font-extrabold text-white leading-tight">
+                        Scan Slip QR
+                      </span>
+                      <span className="block text-[11px] font-medium text-amber-100 mt-0.5">
+                        Open camera scanner
+                      </span>
+                    </div>
+                  </button>
+                </div>
+
+                {/* 2. Upload QR Photo */}
+                <div className="md:col-span-4">
+                  <button
+                    type="button"
+                    disabled={uploadLoading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full p-3.5 rounded-2xl bg-amber-50/80 hover:bg-amber-100/90 active:scale-[0.99] border border-amber-200/80 text-amber-950 transition shadow-2xs flex items-center gap-3 text-left font-bold cursor-pointer group disabled:opacity-50"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-white border border-amber-200 text-amber-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
+                      {uploadLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin text-amber-600" />
+                      ) : (
+                        <Upload className="w-5 h-5 text-amber-700" />
+                      )}
+                    </div>
+                    <div>
+                      <span className="block text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">
+                        {uploadLoading ? 'Reading QR...' : 'Upload QR Photo'}
+                      </span>
+                      <span className="block text-[11px] font-medium text-stone-500 mt-0.5">
+                        Select slip from gallery
+                      </span>
+                    </div>
+                  </button>
+                </div>
+
+                {/* 3. Inline 4-Digit PIN Input Form */}
+                <div className="md:col-span-4">
+                  <form
+                    onSubmit={handleInlinePinLookup}
+                    className="flex items-center gap-2 p-1.5 rounded-2xl bg-stone-50 border border-stone-200/80 focus-within:border-amber-400 focus-within:bg-white transition"
+                  >
+                    <div className="relative flex-1 pl-2">
+                      <input
+                        type="text"
+                        maxLength={4}
+                        value={inlinePin}
+                        onChange={(e) => {
+                          setInlinePin(e.target.value.replace(/[^0-9]/g, ''));
+                          setInlineError(null);
+                          setActionError(null);
+                        }}
+                        placeholder="PIN: 9457"
+                        className="w-full py-2 bg-transparent text-stone-900 placeholder:text-stone-400 font-mono font-bold text-xs sm:text-sm tracking-widest focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      disabled={inlinePin.length !== 4 || inlineLoading}
+                      className="py-2.5 px-3.5 rounded-xl font-bold text-xs text-amber-950 bg-amber-100 hover:bg-amber-200/80 active:scale-95 transition border border-amber-200/80 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 shrink-0 shadow-2xs"
+                    >
+                      {inlineLoading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-800" />
+                      ) : (
+                        <>
+                          <span>Track</span>
+                          <ChevronRight className="w-3.5 h-3.5 text-amber-700" />
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </div>
               </div>
-            </div>
+
+              {/* Error Message Feedback */}
+              {(inlineError || actionError) && (
+                <div className="flex items-center gap-2 p-3 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs font-semibold">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{inlineError || actionError}</span>
+                </div>
+              )}
+            </section>
           )
         )}
 
