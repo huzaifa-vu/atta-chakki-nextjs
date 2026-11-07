@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { ShopSettings, WeeklySchedule, DayOfWeek } from '@/types/database';
 import {
@@ -32,6 +33,7 @@ import { motion } from 'framer-motion';
 const CACHE_KEY = 'chakki_cached_settings';
 
 export default function AdminSettingsPage() {
+  const router = useRouter();
   const [settings, setSettings] = useState<ShopSettings | null>(null);
   const [shopName, setShopName] = useState('Chakki Fresh');
   const [ratePerKg, setRatePerKg] = useState('15');
@@ -221,7 +223,15 @@ export default function AdminSettingsPage() {
           <Link
             href="/admin"
             prefetch={true}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-700 bg-white border border-stone-200 px-3 py-2 rounded-xl transition shadow-2xs cursor-pointer"
+            onClick={(e) => {
+              // Ensure immediate navigation regardless of router state
+              try {
+                router.push('/admin');
+              } catch {
+                window.location.href = '/admin';
+              }
+            }}
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-700 bg-white border border-stone-200 hover:border-amber-300 px-3 py-2 rounded-xl transition shadow-2xs cursor-pointer active:scale-95"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Orders

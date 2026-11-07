@@ -8,7 +8,7 @@ import LiveQRScannerModal from '@/components/customer/LiveQRScannerModal';
 import AddOrderModal from '@/components/customer/AddOrderModal';
 import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/types/database';
-import { useShopOperatingStatus, formatTime12Hour } from '@/lib/utils/shopHours';
+import { useShopOperatingStatus, useShopCountdown, formatTime12Hour } from '@/lib/utils/shopHours';
 import {
   Wheat,
   QrCode,
@@ -28,6 +28,8 @@ import {
   AlertCircle,
   Moon,
   Coffee,
+  Phone,
+  PhoneCall,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -57,6 +59,8 @@ export default function CustomerDashboard() {
 
   const supabase = createClient();
   const shopStatus = useShopOperatingStatus(settings);
+  const countdown = useShopCountdown(shopStatus.isOpen ? null : shopStatus.nextOpenDate);
+  const hasPhoneNumber = Boolean(settings?.phone_number && settings.phone_number.trim().length > 0);
 
   const showToast = (message: string) => {
     setToastMessage(message);
@@ -187,6 +191,18 @@ export default function CustomerDashboard() {
               <span className="text-stone-500 font-medium">Rate:</span>
               <span className="font-extrabold text-stone-900">{currency} {Number(currentRate).toFixed(0)}/kg</span>
             </div>
+
+            {/* Helpline Chip (only if phone added) */}
+            {hasPhoneNumber && (
+              <a
+                href={`tel:${settings?.phone_number}`}
+                className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-amber-50 hover:border-amber-300 border border-stone-200 text-xs font-bold text-stone-700 hover:text-amber-800 transition cursor-pointer"
+                title="Call Counter Helpline"
+              >
+                <Phone className="w-3.5 h-3.5 text-amber-600" />
+                <span>{settings?.phone_number}</span>
+              </a>
+            )}
           </div>
 
           {/* Right: Quick Actions */}
@@ -358,8 +374,13 @@ export default function CustomerDashboard() {
               </div>
             </section>
 
-            {/* 2. Live Chakki Status & Rates Strip - Crisp White Cards */}
-            <section className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            {/* 2. Live Chakki Status & Milling Rates Strip - Crisp Modern Cards */}
+            <section
+              className={`grid grid-cols-1 ${
+                hasPhoneNumber ? 'sm:grid-cols-3' : 'sm:grid-cols-2'
+              } gap-3 sm:gap-4`}
+            >
+              {/* Card 1: Milling Rate */}
               <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1">
                 <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
                   <Wheat className="w-3.5 h-3.5 text-amber-600" />
@@ -371,56 +392,107 @@ export default function CustomerDashboard() {
                   </span>
                   <span className="text-xs text-stone-500 font-bold">/ kg</span>
                 </div>
-                <p className="text-[11px] text-stone-600 font-medium">100% whole wheat stone grinding</p>
-              </div>
-
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1">
-                <span
-                  className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-                    shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                    }`}
-                  />
-                  Chakki Status
-                </span>
-                <div className="pt-0.5">
-                  <span
-                    className={`text-lg sm:text-xl font-black ${
-                      shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-900'
-                    }`}
-                  >
-                    {shopStatus.isBreakActive
-                      ? shopStatus.breakLabel || 'Prayer / Lunch Break'
-                      : shopStatus.isOpen
-                      ? 'Operational & Running'
-                      : shopStatus.isClosedOverride
-                      ? shopStatus.closedReason || 'Temporarily Closed'
-                      : 'Closed for the Day'}
-                  </span>
-                </div>
                 <p className="text-[11px] text-stone-600 font-medium">
-                  {shopStatus.isOpen
-                    ? `Hours: ${shopStatus.formattedHours}`
-                    : `Opens ${shopStatus.formattedNextOpen}`}
+                  100% whole wheat stone grinding
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1">
-                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-blue-600" />
-                  Avg. Turnaround
-                </span>
-                <div className="pt-0.5">
-                  <span className="text-lg sm:text-xl font-black text-stone-900">
-                    15 – 25 Minutes
+              {/* Card 2: Chakki Status (Visually accurate with live open badge or countdown timer) */}
+              <div
+                className={`rounded-2xl p-4 sm:p-5 border transition shadow-2xs space-y-1.5 ${
+                  shopStatus.isOpen
+                    ? 'bg-gradient-to-br from-emerald-50/50 via-white to-white border-emerald-200'
+                    : 'bg-gradient-to-br from-amber-50/60 via-white to-white border-amber-200'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span
+                    className={`text-[11px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
+                      shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'
+                    }`}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                      }`}
+                    />
+                    Chakki Status
+                  </span>
+
+                  <span
+                    className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                      shopStatus.isOpen
+                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                        : 'bg-amber-100 text-amber-900 border border-amber-300'
+                    }`}
+                  >
+                    {shopStatus.isOpen
+                      ? 'Open Now'
+                      : shopStatus.isBreakActive
+                      ? 'Break Time'
+                      : 'Closed'}
                   </span>
                 </div>
-                <p className="text-[11px] text-stone-600 font-medium">Fast live stone rotation</p>
+
+                <div className="pt-0.5">
+                  {shopStatus.isOpen ? (
+                    <div>
+                      <span className="text-lg sm:text-xl font-black text-emerald-950 block leading-tight">
+                        Operational & Milling
+                      </span>
+                      <p className="text-[11px] text-emerald-800/80 font-semibold mt-1">
+                        Today: {shopStatus.formattedHours}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-xl sm:text-2xl font-black text-amber-950 font-mono tracking-tight">
+                          {countdown.formattedString}
+                        </span>
+                        <span className="text-[10px] font-extrabold text-amber-800 uppercase tracking-wide">
+                          until open
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-stone-600 font-semibold mt-1 flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-amber-700 shrink-0" />
+                        <span>Reopens {shopStatus.formattedNextOpen}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
+
+              {/* Card 3: Counter Phone Contact (ONLY shown if admin configured phone number) */}
+              {hasPhoneNumber && (
+                <div className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200 shadow-2xs space-y-1.5 flex flex-col justify-between hover:border-amber-300 transition group">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1.5">
+                        <Phone className="w-3.5 h-3.5 text-amber-600" />
+                        Counter Helpline
+                      </span>
+                      <span className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md">
+                        Direct Call
+                      </span>
+                    </div>
+
+                    <div className="pt-1">
+                      <a
+                        href={`tel:${settings?.phone_number}`}
+                        className="inline-flex items-center gap-2 text-lg sm:text-xl font-black text-stone-900 group-hover:text-amber-700 transition tracking-tight"
+                      >
+                        <PhoneCall className="w-4 h-4 text-amber-600 shrink-0 group-hover:scale-110 transition" />
+                        <span>{settings?.phone_number}</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <p className="text-[11px] text-stone-500 font-medium">
+                    Call counter for orders, timings & support
+                  </p>
+                </div>
+              )}
             </section>
 
             {/* 3. "How Live Milling Works" 4-Stage Visual Pipeline */}

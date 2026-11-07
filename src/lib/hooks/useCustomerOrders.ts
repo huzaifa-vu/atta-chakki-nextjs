@@ -36,8 +36,20 @@ function getInitialOrderIds(): string[] {
 export function useCustomerOrders() {
   const [orderIds, setOrderIds] = useState<string[]>(getInitialOrderIds);
   const [orders, setOrders] = useState<Order[]>([]);
-  const [settings, setSettings] = useState<ShopSettings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState<ShopSettings | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem('chakki_cached_settings');
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    const initialIds = getInitialOrderIds();
+    return initialIds.length > 0;
+  });
   const previousStatusMap = useRef<Record<string, string>>({});
   const supabase = createClient();
 
@@ -117,6 +129,11 @@ export function useCustomerOrders() {
 
         if (settingsRes.data) {
           setSettings(settingsRes.data as ShopSettings);
+          try {
+            localStorage.setItem('chakki_cached_settings', JSON.stringify(settingsRes.data));
+          } catch {
+            // Ignore
+          }
         }
 
         if (ordersRes.data) {

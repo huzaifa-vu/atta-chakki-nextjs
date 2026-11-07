@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Sun,
   Coffee,
+  Phone,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -291,6 +292,19 @@ export default function OrderCard({
                 {formatPrice(order.total_price, currency)}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Optional Helpline Button if Counter Phone is Configured */}
+        {settings?.phone_number && (
+          <div className="pt-2 text-center border-t border-stone-100">
+            <a
+              href={`tel:${settings.phone_number}`}
+              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-600 hover:text-amber-700 transition"
+            >
+              <Phone className="w-3 h-3 text-amber-600" />
+              <span>Questions? Call Counter {settings.phone_number}</span>
+            </a>
           </div>
         )}
       </div>
