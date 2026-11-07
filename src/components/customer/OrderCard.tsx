@@ -61,7 +61,7 @@ export default function OrderCard({
       className={`relative overflow-hidden rounded-3xl bg-white border transition-all duration-300 ${
         isReady
           ? showClosedState
-            ? 'border-indigo-300 ring-2 ring-indigo-100 shadow-xl shadow-indigo-500/10'
+            ? 'border-amber-200/90 ring-2 ring-amber-100/60 shadow-lg shadow-amber-500/5'
             : 'border-emerald-400 ring-4 ring-emerald-100 shadow-xl shadow-emerald-500/10'
           : isGrinding
           ? 'border-amber-300 ring-2 ring-amber-100 shadow-md shadow-amber-500/5'
@@ -213,7 +213,7 @@ export default function OrderCard({
             <div
               className={`p-4 sm:p-5 rounded-2xl text-center flex flex-col items-center justify-center space-y-3 border ${
                 showClosedState
-                  ? 'bg-slate-50/80 border-indigo-200'
+                  ? 'bg-amber-50/40 border-amber-200/70'
                   : 'bg-emerald-50/70 border-emerald-300/80'
               }`}
             >
@@ -229,7 +229,7 @@ export default function OrderCard({
               <div>
                 <span
                   className={`text-xs font-black flex items-center justify-center gap-1.5 ${
-                    showClosedState ? 'text-indigo-950' : 'text-emerald-950'
+                    showClosedState ? 'text-amber-950' : 'text-emerald-950'
                   }`}
                 >
                   <QrCode className="w-4 h-4" />
@@ -237,7 +237,7 @@ export default function OrderCard({
                 </span>
                 <p
                   className={`text-[11px] font-medium mt-0.5 ${
-                    showClosedState ? 'text-indigo-800' : 'text-emerald-800'
+                    showClosedState ? 'text-stone-600' : 'text-emerald-800'
                   }`}
                 >
                   {showClosedState
