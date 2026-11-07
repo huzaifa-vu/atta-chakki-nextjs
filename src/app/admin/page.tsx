@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Order, OrderStatus, ShopSettings } from '@/types/database';
 import AdminOrderCard from '@/components/admin/AdminOrderCard';
@@ -53,6 +54,11 @@ export default function AdminDashboardPage() {
       .single();
     if (data) {
       setSettings(data as ShopSettings);
+      try {
+        localStorage.setItem('chakki_cached_settings', JSON.stringify(data));
+      } catch {
+        // Ignore localStorage error
+      }
     }
   }, [supabase]);
 
@@ -105,6 +111,11 @@ export default function AdminDashboardPage() {
         (payload) => {
           if (payload.new) {
             setSettings(payload.new as ShopSettings);
+            try {
+              localStorage.setItem('chakki_cached_settings', JSON.stringify(payload.new));
+            } catch {
+              // Ignore
+            }
           }
         }
       )
@@ -347,14 +358,15 @@ export default function AdminDashboardPage() {
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             </button>
 
-            <button
-              onClick={() => router.push('/admin/settings')}
+            <Link
+              href="/admin/settings"
+              prefetch={true}
               className="p-2 text-stone-600 hover:text-stone-900 rounded-xl hover:bg-stone-100 transition flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
               title="Settings"
             >
               <SettingsIcon className="w-4 h-4" />
               <span className="hidden sm:inline">Settings</span>
-            </button>
+            </Link>
 
             <button
               onClick={handleSignOut}

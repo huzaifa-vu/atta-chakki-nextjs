@@ -27,6 +27,7 @@ import {
   ArrowRight,
   AlertCircle,
   Moon,
+  Coffee,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -160,7 +161,13 @@ export default function CustomerDashboard() {
                   : 'bg-amber-50 text-amber-800 border-amber-200'
               }`}
             >
-              {shopStatus.isOpen ? (
+              {shopStatus.isBreakActive ? (
+                <>
+                  <Coffee className="w-3.5 h-3.5 text-amber-700" />
+                  <span>{shopStatus.breakLabel || 'Break'}</span>
+                  <span className="text-amber-700/80 font-medium">• Reopens {shopStatus.formattedNextOpen}</span>
+                </>
+              ) : shopStatus.isOpen ? (
                 <>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span>Open Now</span>
@@ -262,7 +269,13 @@ export default function CustomerDashboard() {
                           shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                         }`}
                       />
-                      <span>{shopStatus.isOpen ? 'Counter Open' : 'Counter Closed'}</span>
+                      <span>
+                        {shopStatus.isBreakActive
+                          ? shopStatus.breakLabel || 'Break'
+                          : shopStatus.isOpen
+                          ? 'Counter Open'
+                          : 'Counter Closed'}
+                      </span>
                     </span>
                   </div>
 
@@ -380,7 +393,13 @@ export default function CustomerDashboard() {
                       shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-900'
                     }`}
                   >
-                    {shopStatus.isOpen ? 'Operational & Running' : 'Closed for the Night'}
+                    {shopStatus.isBreakActive
+                      ? shopStatus.breakLabel || 'Prayer / Lunch Break'
+                      : shopStatus.isOpen
+                      ? 'Operational & Running'
+                      : shopStatus.isClosedOverride
+                      ? shopStatus.closedReason || 'Temporarily Closed'
+                      : 'Closed for the Day'}
                   </span>
                 </div>
                 <p className="text-[11px] text-stone-600 font-medium">

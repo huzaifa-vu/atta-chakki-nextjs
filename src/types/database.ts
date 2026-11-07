@@ -1,5 +1,30 @@
 export type OrderStatus = 'queued' | 'grinding' | 'ready' | 'completed';
 
+export interface DayBreak {
+  enabled: boolean;
+  start: string; // '13:00' (24-hr format)
+  end: string;   // '14:30' (24-hr format)
+  label?: string; // e.g. 'Jummah Prayer' or 'Lunch Break'
+}
+
+export interface DaySchedule {
+  isOpen: boolean;
+  open: string;  // '08:00'
+  close: string; // '21:00'
+  break?: DayBreak;
+}
+
+export type DayOfWeek =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday';
+
+export type WeeklySchedule = Record<DayOfWeek, DaySchedule>;
+
 export interface ShopSettings {
   id: string;
   shop_name: string;
@@ -10,6 +35,7 @@ export interface ShopSettings {
   closing_time?: string;
   is_closed_override?: boolean;
   closed_reason?: string;
+  weekly_schedule?: WeeklySchedule | null;
   updated_at: string;
 }
 

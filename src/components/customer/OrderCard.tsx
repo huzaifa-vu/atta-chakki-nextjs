@@ -2,7 +2,7 @@
 
 import { Order, ShopSettings } from '@/types/database';
 import { formatPrice, formatWeight, formatDate } from '@/lib/utils';
-import { useShopOperatingStatus, useShopCountdown } from '@/lib/utils/shopHours';
+import { useShopOperatingStatus, useShopCountdown, formatTime12Hour } from '@/lib/utils/shopHours';
 import OrderStepper from './OrderStepper';
 import { QRCodeSVG } from 'qrcode.react';
 import {
@@ -15,6 +15,7 @@ import {
   Moon,
   ShieldCheck,
   Sun,
+  Coffee,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -72,18 +73,24 @@ export default function OrderCard({
       {isReady && (
         <>
           {showClosedState ? (
-            /* Night / Shop Closed Header - Bright & Light */
+            /* Night / Break Closed Header - Bright & Light */
             <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 px-5 sm:px-6 py-3.5 text-stone-900 flex items-center justify-between border-b border-amber-200/80 shadow-2xs">
               <div className="flex items-center gap-2">
                 <div className="w-6 h-6 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center">
-                  <Moon className="w-3.5 h-3.5" />
+                  {shopStatus.isBreakActive ? (
+                    <Coffee className="w-3.5 h-3.5" />
+                  ) : (
+                    <Moon className="w-3.5 h-3.5" />
+                  )}
                 </div>
                 <span className="text-xs sm:text-sm font-black tracking-tight text-stone-900">
-                  Flour Ready & Stored Safely
+                  {shopStatus.isBreakActive
+                    ? `Flour Ready • ${shopStatus.breakLabel || 'Break'}`
+                    : 'Flour Ready & Stored Safely'}
                 </span>
               </div>
               <span className="text-[11px] bg-amber-100 text-amber-900 border border-amber-300 font-bold px-2.5 py-0.5 rounded-full">
-                Counter Closed
+                {shopStatus.isBreakActive ? 'Break Time' : 'Counter Closed'}
               </span>
             </div>
           ) : (
@@ -104,13 +111,21 @@ export default function OrderCard({
       )}
 
       <div className="p-5 sm:p-7 space-y-4">
-        {/* Closed Night Alert: Countdown Timer & Opening Notice */}
+        {/* Closed Night / Break Alert: Countdown Timer & Opening Notice */}
         {showClosedState && (
           <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-amber-950 text-xs font-bold">
-                <Clock className="w-4 h-4 text-amber-600" />
-                <span>Chakki Counter Opens In</span>
+                {shopStatus.isBreakActive ? (
+                  <Coffee className="w-4 h-4 text-amber-600" />
+                ) : (
+                  <Clock className="w-4 h-4 text-amber-600" />
+                )}
+                <span>
+                  {shopStatus.isBreakActive
+                    ? `${shopStatus.breakLabel || 'Break'} Ends In`
+                    : 'Chakki Counter Opens In'}
+                </span>
               </div>
               <span className="text-[11px] font-semibold text-amber-900">
                 {shopStatus.formattedNextOpen}
@@ -125,7 +140,9 @@ export default function OrderCard({
             </div>
 
             <p className="text-[11px] text-stone-600 leading-relaxed text-center">
-              Your wheat has been freshly stone-milled and packed in a sealed bag. Please visit the counter when doors open to collect it.
+              {shopStatus.isBreakActive
+                ? `Our counter is currently observing ${shopStatus.breakLabel || 'prayer / lunch break'}. Service and pickup resume promptly at ${formatTime12Hour(shopStatus.breakEnd)}.`
+                : 'Your wheat has been freshly stone-milled and packed in a sealed bag. Please visit the counter when doors open to collect it.'}
             </p>
           </div>
         )}
