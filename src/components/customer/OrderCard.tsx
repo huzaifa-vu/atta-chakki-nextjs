@@ -46,6 +46,7 @@ export default function OrderCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isCapturing, setIsCapturing] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
 
   const isReady = order.status === 'ready';
@@ -58,6 +59,8 @@ export default function OrderCard({
 
   const isShopOpen = shopStatus.isOpen;
   const showClosedState = isReady && !isShopOpen;
+  // During image export / share, always present a clean, unblurred, scannable QR ticket
+  const effectiveClosedState = showClosedState && !isCapturing;
 
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const trackingUrl = `${origin}/?track=${order.id}`;
@@ -69,6 +72,10 @@ export default function OrderCard({
 
   const generateCardBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
+
+    // Temporarily switch off blur, lock medallion, and timer for clean image export
+    setIsCapturing(true);
+    await new Promise((resolve) => setTimeout(resolve, 80));
 
     const options = {
       quality: 0.95,
@@ -84,21 +91,26 @@ export default function OrderCard({
       },
     };
 
+    let resultBlob: Blob | null = null;
     try {
-      const blob = await toBlob(cardRef.current, options);
-      if (blob) return blob;
-    } catch (err) {
-      console.warn('html-to-image toBlob issue, attempting toPng fallback:', err);
-    }
+      try {
+        resultBlob = await toBlob(cardRef.current, options);
+      } catch (err) {
+        console.warn('html-to-image toBlob issue, attempting toPng fallback:', err);
+      }
 
-    try {
-      const dataUrl = await toPng(cardRef.current, options);
-      const res = await fetch(dataUrl);
-      return await res.blob();
+      if (!resultBlob) {
+        const dataUrl = await toPng(cardRef.current, options);
+        const res = await fetch(dataUrl);
+        resultBlob = await res.blob();
+      }
     } catch (fallbackErr) {
       console.error('All image capture methods failed:', fallbackErr);
-      return null;
+    } finally {
+      setIsCapturing(false);
     }
+
+    return resultBlob;
   };
 
   const downloadBlob = (blob: Blob, filename: string) => {
@@ -209,7 +221,7 @@ export default function OrderCard({
       transition={{ duration: 0.3 }}
       className={`relative overflow-hidden rounded-3xl bg-white border transition-all duration-300 ${
         isReady
-          ? showClosedState
+          ? effectiveClosedState
             ? 'border-amber-200/90 ring-2 ring-amber-100/60 shadow-lg shadow-amber-500/5'
             : 'border-emerald-400 ring-4 ring-emerald-100 shadow-xl shadow-emerald-500/10'
           : isGrinding
@@ -222,7 +234,7 @@ export default function OrderCard({
       {/* 1. Header Banner for Ready State */}
       {isReady && (
         <>
-          {showClosedState ? (
+          {effectiveClosedState ? (
             /* Night / Break Closed Header - Bright & Light */
             <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 px-5 sm:px-6 py-3.5 text-stone-900 flex items-center justify-between border-b border-amber-200/80 shadow-2xs">
               <div className="flex items-center gap-2">
@@ -326,7 +338,7 @@ export default function OrderCard({
             {/* Unified Clean Pickup Ticket Card */}
             <div
               className={`p-4 sm:p-5 rounded-2xl text-center flex flex-col items-center justify-center space-y-3.5 border ${
-                showClosedState
+                effectiveClosedState
                   ? 'bg-amber-50/40 border-amber-200/70'
                   : 'bg-emerald-50/70 border-emerald-300/80'
               }`}
@@ -335,7 +347,7 @@ export default function OrderCard({
               <div className="relative p-3.5 bg-white rounded-2xl shadow-sm border border-stone-200 flex items-center justify-center">
                 <div
                   className={
-                    showClosedState
+                    effectiveClosedState
                       ? 'filter blur-[1.5px] opacity-60 select-none pointer-events-none transition-all'
                       : 'transition-all'
                   }
@@ -348,9 +360,12 @@ export default function OrderCard({
                   />
                 </div>
 
-                {/* Prominent Center Lock Medallion on QR when store is closed */}
-                {showClosedState && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                {/* Prominent Center Lock Medallion on QR when store is closed (omitted in exported image) */}
+                {effectiveClosedState && (
+                  <div
+                    data-no-capture="true"
+                    className="absolute inset-0 flex items-center justify-center pointer-events-none"
+                  >
                     <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white shadow-md border-2 border-white flex items-center justify-center">
                       <Lock className="w-6 h-6" />
                     </div>
@@ -362,30 +377,33 @@ export default function OrderCard({
               <div>
                 <span
                   className={`text-xs font-black flex items-center justify-center gap-1.5 ${
-                    showClosedState ? 'text-amber-950' : 'text-emerald-950'
+                    effectiveClosedState ? 'text-amber-950' : 'text-emerald-950'
                   }`}
                 >
-                  {showClosedState ? (
+                  {effectiveClosedState ? (
                     <Lock className="w-4 h-4 text-amber-700" />
                   ) : (
                     <QrCode className="w-4 h-4 text-emerald-700" />
                   )}
-                  Pickup QR Code {showClosedState && '(Locked)'}
+                  Pickup QR Code {effectiveClosedState && '(Locked)'}
                 </span>
                 <p
                   className={`text-[11px] font-medium mt-0.5 ${
-                    showClosedState ? 'text-stone-600' : 'text-emerald-800'
+                    effectiveClosedState ? 'text-stone-600' : 'text-emerald-800'
                   }`}
                 >
-                  {showClosedState
+                  {effectiveClosedState
                     ? 'Chakki is currently closed • QR unlocks when doors open'
                     : 'Show this QR at the counter to collect your flour'}
                 </p>
               </div>
 
-              {/* Wide Horizontal Countdown Timer Bar (Spacious, Single-Line, Uncramped) */}
-              {showClosedState && (
-                <div className="w-full bg-white rounded-xl p-3 sm:p-3.5 border border-amber-200/90 shadow-2xs flex items-center justify-between gap-3 text-left">
+              {/* Wide Horizontal Countdown Timer Bar (Omitted from exported image) */}
+              {effectiveClosedState && (
+                <div
+                  data-no-capture="true"
+                  className="w-full bg-white rounded-xl p-3 sm:p-3.5 border border-amber-200/90 shadow-2xs flex items-center justify-between gap-3 text-left"
+                >
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center shrink-0">
                       <Clock className="w-4 h-4 text-amber-700" />
