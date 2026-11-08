@@ -28,6 +28,7 @@ export default function TokenReceiptModal({
   settings,
 }: TokenReceiptModalProps) {
   const [copied, setCopied] = useState(false);
+  const [copiedPin, setCopiedPin] = useState(false);
 
   if (!order) return null;
 
@@ -40,6 +41,13 @@ export default function TokenReceiptModal({
     navigator.clipboard.writeText(trackingUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleCopyPin = () => {
+    if (!order.access_code) return;
+    navigator.clipboard.writeText(order.access_code);
+    setCopiedPin(true);
+    setTimeout(() => setCopiedPin(false), 2000);
   };
 
   const handlePrint = () => {
@@ -68,9 +76,27 @@ export default function TokenReceiptModal({
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-100">
                   Order Successfully Created
                 </span>
-                <h3 className="text-xl font-black">
-                  PIN: {order.access_code}
-                </h3>
+                <button
+                  type="button"
+                  onClick={handleCopyPin}
+                  className="flex items-center gap-2 text-xl font-black text-white hover:text-amber-100 active:scale-95 transition cursor-pointer group text-left"
+                  title="Click to copy PIN"
+                >
+                  <span>PIN: {order.access_code}</span>
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 group-hover:bg-white/30 transition flex items-center gap-1">
+                    {copiedPin ? (
+                      <>
+                        <Check className="w-3 h-3 text-white stroke-[3]" />
+                        <span>Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3 text-white/80" />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </span>
+                </button>
               </div>
               <button
                 onClick={onClose}
@@ -91,19 +117,61 @@ export default function TokenReceiptModal({
                 />
               </div>
 
-              {/* 4-digit code banner */}
+              {/* 4-digit code banner - Click/Tap to Copy */}
               {order.access_code && (
-                <div className="bg-stone-50 border border-stone-200 rounded-2xl p-3.5 max-w-xs mx-auto">
-                  <span className="block text-[10px] font-bold text-stone-500 uppercase tracking-widest">
-                    4-Digit Access PIN
-                  </span>
-                  <span className="block text-3xl font-mono font-black tracking-widest text-amber-600 mt-0.5">
-                    {order.access_code}
-                  </span>
-                  <p className="text-[11px] text-stone-500 mt-1">
-                    Customer can scan QR or enter PIN on our website
+                <button
+                  type="button"
+                  onClick={handleCopyPin}
+                  className={`w-full max-w-xs mx-auto block rounded-2xl p-3.5 transition-all duration-200 border cursor-pointer active:scale-95 group text-center shadow-2xs ${
+                    copiedPin
+                      ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-200'
+                      : 'bg-stone-50 hover:bg-amber-50/60 border-stone-200 hover:border-amber-300'
+                  }`}
+                  title="Click or tap to copy PIN"
+                >
+                  <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest transition">
+                    {copiedPin ? (
+                      <span className="inline-flex items-center gap-1 text-emerald-700 font-extrabold animate-in fade-in zoom-in duration-150">
+                        <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600" />
+                        PIN Copied to Clipboard!
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-stone-500 group-hover:text-amber-800">
+                        <Copy className="w-3 h-3 text-stone-400 group-hover:text-amber-600" />
+                        4-Digit Access PIN • Tap to copy
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-center gap-2 mt-1">
+                    <span
+                      className={`block text-3xl font-mono font-black tracking-widest transition-colors duration-150 ${
+                        copiedPin ? 'text-emerald-700' : 'text-amber-600 group-hover:text-amber-700'
+                      }`}
+                    >
+                      {order.access_code}
+                    </span>
+                    <span
+                      className={`p-1.5 rounded-xl transition-all duration-150 ${
+                        copiedPin
+                          ? 'bg-emerald-100 text-emerald-700 scale-110'
+                          : 'bg-stone-200/70 group-hover:bg-amber-100 text-stone-500 group-hover:text-amber-700'
+                      }`}
+                    >
+                      {copiedPin ? (
+                        <Check className="w-4 h-4 stroke-[3]" />
+                      ) : (
+                        <Copy className="w-4 h-4" />
+                      )}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-stone-500 mt-1 transition-colors">
+                    {copiedPin
+                      ? '✓ Copied! You can paste or share it now.'
+                      : 'Customer can scan QR or enter PIN on our website'}
                   </p>
-                </div>
+                </button>
               )}
 
               {/* Order quick info */}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Order, OrderStatus } from '@/types/database';
 import { formatPrice, formatWeight, formatDate } from '@/lib/utils';
 import StatusBadge from './StatusBadge';
@@ -42,6 +43,15 @@ export default function AdminOrderCard({
   const isGrinding = order.status === 'grinding';
   const isReady = order.status === 'ready';
   const isCompleted = order.status === 'completed';
+  const [copiedPin, setCopiedPin] = useState(false);
+
+  const handleCopyPin = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!order.access_code) return;
+    navigator.clipboard.writeText(order.access_code);
+    setCopiedPin(true);
+    setTimeout(() => setCopiedPin(false), 2000);
+  };
 
   return (
     <motion.div
@@ -88,15 +98,22 @@ export default function AdminOrderCard({
             </button>
           )}
 
-          {/* 4-digit PIN Badge */}
-          <div className="w-14 h-12 rounded-xl bg-stone-900 text-white flex flex-col items-center justify-center shadow-xs shrink-0">
+          {/* 4-digit PIN Badge - Click to Copy */}
+          <button
+            type="button"
+            onClick={handleCopyPin}
+            className={`w-14 h-12 rounded-xl text-white flex flex-col items-center justify-center shadow-xs shrink-0 cursor-pointer active:scale-95 transition-all ${
+              copiedPin ? 'bg-emerald-600 ring-2 ring-emerald-300' : 'bg-stone-900 hover:bg-stone-800'
+            }`}
+            title="Click to copy PIN"
+          >
             <span className="text-[9px] font-bold text-amber-300 uppercase leading-none tracking-widest">
-              PIN
+              {copiedPin ? 'COPIED' : 'PIN'}
             </span>
             <span className="text-base font-mono font-black tracking-wider leading-tight">
               {order.access_code || '---'}
             </span>
-          </div>
+          </button>
 
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap min-w-0">

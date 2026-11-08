@@ -47,6 +47,15 @@ export default function OrderCard({
   const [isSharing, setIsSharing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
+  const [copiedPin, setCopiedPin] = useState(false);
+
+  const handleCopyPin = () => {
+    if (!order.access_code) return;
+    navigator.clipboard.writeText(order.access_code);
+    setCopiedPin(true);
+    showLocalFeedback(`✓ PIN ${order.access_code} copied to clipboard!`);
+    setTimeout(() => setCopiedPin(false), 2000);
+  };
 
   const isReady = order.status === 'ready';
   const isGrinding = order.status === 'grinding';
@@ -325,16 +334,24 @@ export default function OrderCard({
             </p>
           </div>
 
-          {/* 4-digit PIN badge */}
+          {/* 4-digit PIN badge - Tap to copy */}
           {!isCompleted && order.access_code && (
-            <div className="bg-stone-900 text-white rounded-2xl px-4 py-2 text-center shadow-xs shrink-0">
+            <button
+              type="button"
+              data-no-capture="true"
+              onClick={handleCopyPin}
+              className={`rounded-2xl px-4 py-2 text-center shadow-xs shrink-0 cursor-pointer active:scale-95 transition-all ${
+                copiedPin ? 'bg-emerald-600 ring-2 ring-emerald-300' : 'bg-stone-900 hover:bg-stone-800'
+              }`}
+              title="Click or tap to copy PIN"
+            >
               <span className="block text-[9px] font-bold text-amber-400 uppercase tracking-widest">
-                PIN
+                {copiedPin ? 'COPIED!' : 'PIN'}
               </span>
               <span className="block text-xl sm:text-2xl font-mono font-bold tracking-widest text-white leading-tight">
                 {order.access_code}
               </span>
-            </div>
+            </button>
           )}
 
           {isCompleted && onRemove && (
