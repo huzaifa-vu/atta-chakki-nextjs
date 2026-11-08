@@ -543,10 +543,112 @@ export default function AdminDashboardPage() {
 
         {/* Generous Spacing Buffer & Divider before Tabs */}
         <div className="pt-2 sm:pt-4 space-y-4 w-full min-w-0">
-          {/* Segmented Filter Navigation Tabs - Horizontally scrollable without breaking parent */}
-          <div className="w-full border-b border-stone-200/80 pb-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+          {/* Mobile Status Filter Navigation (Zero-scroll 2-tier segmented control) */}
+          <div className="sm:hidden w-full border-b border-stone-200/80 pb-3">
+            <div className="bg-stone-100/90 p-1.5 rounded-2xl border border-stone-200/70 shadow-2xs space-y-1.5 w-full">
+              {/* Row 1: Macro Views (Active Orders vs Completed History) */}
+              <div className="grid grid-cols-2 gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('all_active')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
+                    activeTab === 'all_active'
+                      ? 'bg-white text-stone-900 shadow-xs ring-1 ring-stone-900/5'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/40'
+                  }`}
+                >
+                  <span className="truncate">Active Orders</span>
+                  <span
+                    className={`text-[11px] px-1.5 py-0.5 rounded-full font-bold shrink-0 transition-colors ${
+                      activeTab === 'all_active'
+                        ? 'bg-stone-900 text-white'
+                        : 'bg-stone-200/80 text-stone-600'
+                    }`}
+                  >
+                    {activeOrders.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('completed')}
+                  className={`py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 min-w-0 ${
+                    activeTab === 'completed'
+                      ? 'bg-stone-800 text-white shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900 hover:bg-white/40'
+                  }`}
+                >
+                  <span className="truncate">Completed</span>
+                  <span
+                    className={`text-[11px] px-1.5 py-0.5 rounded-full font-bold shrink-0 transition-colors ${
+                      activeTab === 'completed'
+                        ? 'bg-stone-700 text-stone-200'
+                        : 'bg-stone-200/80 text-stone-600'
+                    }`}
+                  >
+                    {completedOrders.length}
+                  </span>
+                </button>
+              </div>
+
+              {/* Row 2: Active Pipeline Stage Sub-filters */}
+              <div className="grid grid-cols-3 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('queued')}
+                  className={`py-1.5 px-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 min-w-0 ${
+                    activeTab === 'queued'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'bg-white/50 text-stone-600 hover:text-stone-900 hover:bg-white'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeTab === 'queued' ? 'bg-amber-200' : 'bg-amber-500'}`} />
+                  <span className="truncate">Queue</span>
+                  <span className={`text-[10px] font-bold shrink-0 ${activeTab === 'queued' ? 'text-amber-100' : 'text-stone-500'}`}>
+                    ({queuedOrders.length})
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('grinding')}
+                  className={`py-1.5 px-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 min-w-0 ${
+                    activeTab === 'grinding'
+                      ? 'bg-blue-600 text-white shadow-xs'
+                      : 'bg-white/50 text-stone-600 hover:text-stone-900 hover:bg-white'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeTab === 'grinding' ? 'bg-blue-200' : 'bg-blue-500'}`} />
+                  <span className="truncate">Grinding</span>
+                  <span className={`text-[10px] font-bold shrink-0 ${activeTab === 'grinding' ? 'text-blue-100' : 'text-stone-500'}`}>
+                    ({grindingOrders.length})
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('ready')}
+                  className={`py-1.5 px-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer flex items-center justify-center gap-1 min-w-0 ${
+                    activeTab === 'ready'
+                      ? 'bg-emerald-600 text-white shadow-xs'
+                      : 'bg-white/50 text-stone-600 hover:text-stone-900 hover:bg-white'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeTab === 'ready' ? 'bg-emerald-200' : 'bg-emerald-500'}`} />
+                  <span className="truncate">Ready</span>
+                  <span className={`text-[10px] font-bold shrink-0 ${activeTab === 'ready' ? 'text-emerald-100' : 'text-stone-500'}`}>
+                    ({readyOrders.length})
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Segmented Filter Navigation Tabs (Unchanged for >= sm / Desktop) */}
+          <div className="hidden sm:block w-full border-b border-stone-200/80 pb-3 overflow-x-auto no-scrollbar">
             <div className="bg-stone-100/90 p-1 rounded-2xl border border-stone-200/70 inline-flex items-center gap-1 shadow-2xs min-w-max">
               <button
+                type="button"
                 onClick={() => setActiveTab('all_active')}
                 className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'all_active'
@@ -558,6 +660,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab('queued')}
                 className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'queued'
@@ -569,6 +672,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab('grinding')}
                 className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'grinding'
@@ -580,6 +684,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab('ready')}
                 className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'ready'
@@ -591,6 +696,7 @@ export default function AdminDashboardPage() {
               </button>
 
               <button
+                type="button"
                 onClick={() => setActiveTab('completed')}
                 className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'completed'
