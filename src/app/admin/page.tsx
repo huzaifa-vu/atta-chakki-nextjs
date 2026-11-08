@@ -371,17 +371,17 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Right: Sleek, Uniform Action Buttons */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Customer Storefront Link */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {/* Customer Storefront Link (Hidden on mobile for clean breathing room) */}
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="hidden sm:inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Open customer view in new tab"
             >
               <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
-              <span className="hidden sm:inline">Customer View</span>
+              <span>Customer View</span>
             </a>
 
             {/* Refresh Button */}
@@ -398,20 +398,20 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/settings"
               prefetch={true}
-              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-800 bg-amber-50/70 hover:bg-amber-100 border border-amber-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-800 bg-stone-50 hover:bg-stone-100 border border-stone-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Shop Settings & Hours"
             >
-              <SettingsIcon className="w-3.5 h-3.5 text-amber-700" />
+              <SettingsIcon className="w-3.5 h-3.5 text-stone-600" />
               <span className="hidden sm:inline">Settings</span>
             </Link>
 
             {/* Sign Out Button */}
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-600 hover:text-rose-700 bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Sign Out of Admin Portal"
             >
-              <LogOut className="w-3.5 h-3.5 text-rose-600" />
+              <LogOut className="w-3.5 h-3.5 text-stone-500 hover:text-rose-600" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
@@ -431,15 +431,9 @@ export default function AdminDashboardPage() {
         {/* Top Header: Pipeline Title & Primary Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 min-w-0">
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight truncate">
-                Order Pipeline
-              </h2>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Live
-              </span>
-            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight truncate">
+              Order Pipeline
+            </h2>
             <p className="text-xs text-stone-500 font-medium mt-0.5 truncate sm:whitespace-normal">
               Live wheat milling queue, counter slip generation & QR pickup
             </p>
