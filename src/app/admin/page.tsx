@@ -10,7 +10,7 @@ import NewOrderModal from '@/components/admin/NewOrderModal';
 import TokenReceiptModal from '@/components/admin/TokenReceiptModal';
 import AdminQRScannerModal from '@/components/admin/AdminQRScannerModal';
 import { formatWeight } from '@/lib/utils';
-import { useShopOperatingStatus, formatTime12Hour } from '@/lib/utils/shopHours';
+import { useShopOperatingStatus, formatTime12Hour, formatNextOpenShort } from '@/lib/utils/shopHours';
 import {
   Wheat,
   Plus,
@@ -349,15 +349,15 @@ export default function AdminDashboardPage() {
                   />
                   <span className={`font-bold shrink-0 ${shopStatus.isOpen ? 'text-emerald-700' : 'text-amber-700'}`}>
                     {shopStatus.isOpen
-                      ? 'Counter Open'
+                      ? 'Open'
                       : shopStatus.isBreakActive
-                      ? shopStatus.breakLabel || 'Break'
-                      : 'Counter Closed'}
+                      ? 'Break'
+                      : 'Closed'}
                   </span>
-                  <span className="text-stone-400 truncate">
+                  <span className="text-stone-400 whitespace-nowrap">
                     • {shopStatus.isOpen
                       ? `Closes ${formatTime12Hour(shopStatus.todaySchedule?.close)}`
-                      : `Opens ${shopStatus.formattedNextOpen}`}
+                      : `Opens ${formatNextOpenShort(shopStatus.formattedNextOpen)}`}
                   </span>
                 </span>
                 {displayRate && (

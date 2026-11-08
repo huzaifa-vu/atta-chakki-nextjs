@@ -99,6 +99,18 @@ export function formatTime12Hour(time24?: string): string {
   return `${hour12}:${minuteDisplay} ${period}`;
 }
 
+/**
+ * Strips redundant text like "Today at " from next open strings, producing compact formats
+ * e.g. "Today at 8:00 AM" -> "8:00 AM", "Tomorrow at 8:00 AM" -> "Tomorrow 8:00 AM"
+ */
+export function formatNextOpenShort(formatted?: string): string {
+  if (!formatted) return '8:00 AM';
+  return formatted
+    .replace(/^Today at /i, '')
+    .replace(/^Tomorrow at /i, 'Tomorrow ')
+    .replace(/ at /i, ' ');
+}
+
 export function parseTimeToMinutes(timeStr?: string, defaultMinutes = 480): number {
   if (!timeStr || !timeStr.includes(':')) return defaultMinutes;
   const [hStr, mStr] = timeStr.split(':');

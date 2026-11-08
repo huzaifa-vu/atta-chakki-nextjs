@@ -8,7 +8,7 @@ import LiveQRScannerModal from '@/components/customer/LiveQRScannerModal';
 import AddOrderModal from '@/components/customer/AddOrderModal';
 import { createClient } from '@/lib/supabase/client';
 import { Order } from '@/types/database';
-import { useShopOperatingStatus, useShopCountdown, formatTime12Hour } from '@/lib/utils/shopHours';
+import { useShopOperatingStatus, useShopCountdown, formatTime12Hour, formatNextOpenShort } from '@/lib/utils/shopHours';
 import { formatPhoneNumber } from '@/lib/utils';
 import { extractOrderInfoFromQR, playSuccessFeedback } from '@/lib/utils/qrUtils';
 import {
@@ -297,31 +297,31 @@ export default function CustomerDashboard() {
         {/* 1. At-A-Glance Unified Shop Overview (order-2 on mobile = below active order; sm:order-1 on desktop) */}
         <section className="order-2 sm:order-1 bg-white rounded-2xl border border-stone-200/80 shadow-2xs px-3.5 py-2.5 sm:px-4 sm:py-2.5 transition">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 min-w-0">
-            {/* 1. Operating Status & Countdown */}
+            {/* 1. Operating Status & Countdown - Crisp & Compact without cutting text */}
             <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0 flex-1">
-              <div className="flex items-center gap-2 min-w-0">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <span
                   className={`w-2 h-2 rounded-full shrink-0 ${
                     shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                   }`}
                 />
-                <span className="text-xs font-bold text-stone-900 truncate">
+                <span className={`text-xs font-bold shrink-0 ${shopStatus.isOpen ? 'text-emerald-700' : 'text-amber-800'}`}>
                   {shopStatus.isOpen
-                    ? 'Counter Open'
+                    ? 'Open'
                     : shopStatus.isBreakActive
-                    ? 'On Break'
-                    : 'Counter Closed'}
+                    ? 'Break'
+                    : 'Closed'}
                 </span>
-                <span className="text-xs text-stone-300">•</span>
-                <span className="text-xs text-stone-500 font-medium truncate">
+                <span className="text-xs text-stone-300 shrink-0">•</span>
+                <span className="text-xs text-stone-600 font-medium whitespace-nowrap">
                   {shopStatus.isOpen
                     ? `Closes ${formatTime12Hour(shopStatus.todaySchedule?.close)}`
-                    : `Reopens ${shopStatus.formattedNextOpen}`}
+                    : `Opens ${formatNextOpenShort(shopStatus.formattedNextOpen)}`}
                 </span>
               </div>
 
-              {!shopStatus.isOpen && (
-                <span className="text-[11px] font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200/90 px-2 py-0.5 rounded-lg shrink-0">
+              {!shopStatus.isOpen && countdown.compactString && (
+                <span className="text-[11px] font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200/90 px-2 py-0.5 rounded-lg shrink-0 whitespace-nowrap">
                   in {countdown.compactString}
                 </span>
               )}
@@ -330,10 +330,10 @@ export default function CustomerDashboard() {
             {/* Mobile hairline divider */}
             <div className="border-t border-stone-100 sm:hidden -mx-1" />
 
-            {/* 2. Rate & Helpline Group */}
-            <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 text-xs shrink-0">
+            {/* 2. Rate & Helpline Group - Guaranteed no cutoffs */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 text-xs shrink-0 w-full sm:w-auto">
               {/* Milling Rate */}
-              <div className="flex items-center gap-1.5 text-stone-600">
+              <div className="flex items-center gap-1.5 text-stone-600 whitespace-nowrap shrink-0">
                 <Wheat className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                 <span className="text-stone-500 font-medium">Rate:</span>
                 <span className="font-bold text-stone-900">
@@ -350,7 +350,7 @@ export default function CustomerDashboard() {
               {hasPhoneNumber && (
                 <a
                   href={`tel:${settings?.phone_number}`}
-                  className="flex items-center gap-1.5 text-stone-700 hover:text-amber-700 active:text-amber-800 transition group"
+                  className="flex items-center gap-1.5 text-stone-700 hover:text-amber-700 active:text-amber-800 transition whitespace-nowrap shrink-0 group"
                   title="Call Chakki Counter"
                 >
                   <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition" />
