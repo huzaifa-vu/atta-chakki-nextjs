@@ -294,130 +294,70 @@ export default function CustomerDashboard() {
           onChange={handleImageUpload}
         />
 
-        {/* 1. At-A-Glance Combined Shop Overview Card (order-2 on mobile = below active order; sm:order-1 on desktop) */}
-        <section className="order-2 sm:order-1 bg-white rounded-2xl border border-stone-200/90 shadow-2xs p-3.5 sm:p-4 transition">
-          <div
-            className={`grid grid-cols-1 ${
-              hasPhoneNumber ? 'sm:grid-cols-3 sm:divide-x' : 'sm:grid-cols-2 sm:divide-x'
-            } gap-3 sm:gap-0 sm:divide-stone-100`}
-          >
-            {/* 1. Chakki Status & Live Hours */}
-            <div className="flex flex-col justify-between sm:pr-5 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5 truncate">
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                    }`}
-                  />
-                  <span className="truncate">Chakki Status</span>
-                </span>
-
+        {/* 1. At-A-Glance Unified Shop Overview (order-2 on mobile = below active order; sm:order-1 on desktop) */}
+        <section className="order-2 sm:order-1 bg-white rounded-2xl border border-stone-200/80 shadow-2xs px-3.5 py-2.5 sm:px-4 sm:py-2.5 transition">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 min-w-0">
+            {/* 1. Operating Status & Countdown */}
+            <div className="flex items-center justify-between sm:justify-start gap-2 min-w-0 flex-1">
+              <div className="flex items-center gap-2 min-w-0">
                 <span
-                  className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full shrink-0 ${
-                    shopStatus.isOpen
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                      : 'bg-amber-50 text-amber-800 border border-amber-200'
+                  className={`w-2 h-2 rounded-full shrink-0 ${
+                    shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                   }`}
-                >
+                />
+                <span className="text-xs font-bold text-stone-900 truncate">
                   {shopStatus.isOpen
-                    ? 'Open Now'
+                    ? 'Counter Open'
                     : shopStatus.isBreakActive
-                    ? 'Break'
-                    : 'Closed'}
+                    ? 'On Break'
+                    : 'Counter Closed'}
+                </span>
+                <span className="text-xs text-stone-300">•</span>
+                <span className="text-xs text-stone-500 font-medium truncate">
+                  {shopStatus.isOpen
+                    ? `Closes ${formatTime12Hour(shopStatus.todaySchedule?.close)}`
+                    : `Reopens ${shopStatus.formattedNextOpen}`}
                 </span>
               </div>
 
-              <div className="mt-1.5 min-w-0">
-                {shopStatus.isOpen ? (
-                  <div>
-                    <span className="text-base sm:text-lg font-bold text-stone-900 leading-tight block truncate">
-                      Milling Active
-                    </span>
-                    <p className="text-xs text-stone-500 font-normal mt-0.5 truncate">
-                      Closes {formatTime12Hour(shopStatus.todaySchedule?.close)}
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex items-baseline justify-between sm:justify-start gap-1.5 flex-wrap sm:flex-nowrap">
-                      <span className="text-base sm:text-lg font-mono font-bold text-stone-900 tracking-tight">
-                        {countdown.formattedString}
-                      </span>
-                      <span className="text-[10px] font-bold text-stone-400 uppercase tracking-wider">
-                        until open
-                      </span>
-                    </div>
-                    <p className="text-xs text-stone-500 font-normal mt-0.5 flex items-center gap-1 truncate">
-                      <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span className="truncate">Reopens {shopStatus.formattedNextOpen}</span>
-                    </p>
-                  </div>
-                )}
-              </div>
+              {!shopStatus.isOpen && (
+                <span className="text-[11px] font-mono font-bold text-amber-800 bg-amber-50 border border-amber-200/90 px-2 py-0.5 rounded-lg shrink-0">
+                  in {countdown.compactString}
+                </span>
+              )}
             </div>
 
-            {/* Subtle Divider on mobile between Status and the bottom Rate/Helpline row */}
-            <div className="border-t border-stone-100 -my-0.5 sm:hidden" />
+            {/* Mobile hairline divider */}
+            <div className="border-t border-stone-100 sm:hidden -mx-1" />
 
-            {/* Bottom group on mobile (2 columns) / Distributed columns on desktop */}
-            <div
-              className={`grid ${
-                hasPhoneNumber ? 'grid-cols-2' : 'grid-cols-1'
-              } sm:contents gap-3 min-w-0`}
-            >
-              {/* 2. Milling Rate */}
-              <div className="flex flex-col justify-between sm:px-5 min-w-0">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5 truncate">
-                    <Wheat className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                    <span className="truncate">Milling Rate</span>
-                  </span>
-                  <span className="hidden md:inline-block text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-stone-100 text-stone-600 border border-stone-200 shrink-0">
-                    Stone Ground
-                  </span>
-                </div>
-
-                <div className="mt-1.5 min-w-0">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-base sm:text-lg font-bold text-stone-900 leading-none">
-                      {currency} {displayRate}
-                    </span>
-                    <span className="text-xs text-stone-500 font-semibold">/ kg</span>
-                  </div>
-                  <p className="text-xs text-stone-500 font-normal mt-0.5 truncate">
-                    100% whole wheat
-                  </p>
-                </div>
+            {/* 2. Rate & Helpline Group */}
+            <div className="flex items-center justify-between sm:justify-end gap-3 sm:gap-5 text-xs shrink-0">
+              {/* Milling Rate */}
+              <div className="flex items-center gap-1.5 text-stone-600">
+                <Wheat className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="text-stone-500 font-medium">Rate:</span>
+                <span className="font-bold text-stone-900">
+                  {currency} {displayRate}/kg
+                </span>
               </div>
 
-              {/* 3. Counter Phone Contact / Helpline */}
+              {/* Vertical divider on desktop */}
               {hasPhoneNumber && (
-                <div className="flex flex-col justify-between sm:pl-5 min-w-0 group">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-bold uppercase tracking-wider text-stone-500 flex items-center gap-1.5 truncate">
-                      <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span className="truncate">Helpline</span>
-                    </span>
-                    <span className="hidden md:inline-block text-[10px] font-bold uppercase bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full shrink-0">
-                      Direct Call
-                    </span>
-                  </div>
+                <span className="text-stone-200 hidden sm:inline">|</span>
+              )}
 
-                  <div className="mt-1.5 min-w-0">
-                    <a
-                      href={`tel:${settings?.phone_number}`}
-                      className="inline-flex items-center gap-1 text-sm sm:text-base font-bold text-stone-900 group-hover:text-amber-700 active:text-amber-800 transition tracking-tight truncate w-full"
-                      title="Call Chakki Counter"
-                    >
-                      <PhoneCall className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition" />
-                      <span className="truncate">{formatPhoneNumber(settings?.phone_number)}</span>
-                    </a>
-                    <p className="text-xs text-stone-500 font-normal mt-0.5 truncate">
-                      Tap to call counter
-                    </p>
-                  </div>
-                </div>
+              {/* Phone Helpline */}
+              {hasPhoneNumber && (
+                <a
+                  href={`tel:${settings?.phone_number}`}
+                  className="flex items-center gap-1.5 text-stone-700 hover:text-amber-700 active:text-amber-800 transition group"
+                  title="Call Chakki Counter"
+                >
+                  <Phone className="w-3.5 h-3.5 text-amber-600 shrink-0 group-hover:scale-110 transition" />
+                  <span className="font-bold text-stone-900 group-hover:text-amber-700">
+                    {formatPhoneNumber(settings?.phone_number)}
+                  </span>
+                </a>
               )}
             </div>
           </div>

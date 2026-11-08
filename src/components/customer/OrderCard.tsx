@@ -350,56 +350,42 @@ export default function OrderCard({
             </p>
           </div>
 
-          {/* 4-digit PIN badge - Clean, compact, blurred normally with eye icon reveal */}
+          {/* 4-digit PIN badge - Small, sleek, blurred normally, click to copy when revealed */}
           {!isCompleted && order.access_code && (
-            <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100/80 border border-stone-200/90 rounded-2xl p-1.5 sm:px-2.5 sm:py-2 transition shadow-2xs shrink-0">
-              <div className="flex flex-col items-start pr-1">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-stone-500 leading-none">
-                  PIN
-                </span>
-                <span
-                  data-pin-digits="true"
-                  onClick={handleCopyPin}
-                  className={`font-mono text-base sm:text-lg font-bold tracking-widest text-stone-900 cursor-pointer transition-all duration-200 leading-none mt-1 ${
-                    showPin
-                      ? 'filter-none select-all opacity-100'
-                      : 'filter blur-[4.5px] select-none opacity-60'
-                  }`}
-                  title={showPin ? 'Click to copy PIN' : 'Click eye to reveal PIN'}
-                >
-                  {order.access_code}
-                </span>
-              </div>
-
-              {/* Eye toggle button */}
+            <div className="inline-flex items-center gap-1.5 bg-stone-100/90 hover:bg-stone-200/70 border border-stone-200/90 rounded-xl px-2.5 py-1 text-xs font-medium text-stone-700 shadow-2xs transition shrink-0 select-none">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-500">
+                PIN
+              </span>
+              <span
+                data-pin-digits="true"
+                onClick={() => {
+                  if (showPin) {
+                    handleCopyPin();
+                  } else {
+                    setShowPin(true);
+                  }
+                }}
+                className={`font-mono font-bold text-xs sm:text-sm tracking-wider transition-all duration-150 ${
+                  showPin
+                    ? 'filter-none text-stone-900 cursor-pointer hover:text-amber-700 active:scale-95'
+                    : 'filter blur-[4px] text-stone-400 cursor-pointer'
+                }`}
+                title={showPin ? 'Click to copy PIN' : 'Click to reveal PIN'}
+              >
+                {copiedPin && showPin ? '✓ Copied!' : order.access_code}
+              </span>
               <button
                 type="button"
                 data-no-capture="true"
                 onClick={() => setShowPin(!showPin)}
-                className="p-1.5 rounded-xl hover:bg-stone-200/70 text-stone-500 hover:text-stone-800 transition cursor-pointer active:scale-95"
+                className="p-0.5 rounded text-stone-400 hover:text-stone-700 transition cursor-pointer active:scale-90"
                 title={showPin ? 'Hide PIN' : 'Reveal PIN'}
                 aria-label={showPin ? 'Hide PIN' : 'Reveal PIN'}
               >
                 {showPin ? (
-                  <EyeOff className="w-4 h-4 text-amber-700" />
+                  <EyeOff className="w-3.5 h-3.5 text-amber-600" />
                 ) : (
-                  <Eye className="w-4 h-4 text-stone-500" />
-                )}
-              </button>
-
-              {/* Copy button */}
-              <button
-                type="button"
-                data-no-capture="true"
-                onClick={handleCopyPin}
-                className="p-1.5 rounded-xl hover:bg-stone-200/70 text-stone-500 hover:text-stone-800 transition cursor-pointer active:scale-95"
-                title="Copy PIN"
-                aria-label="Copy PIN"
-              >
-                {copiedPin ? (
-                  <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
-                ) : (
-                  <Copy className="w-4 h-4" />
+                  <Eye className="w-3.5 h-3.5" />
                 )}
               </button>
             </div>
@@ -510,7 +496,7 @@ export default function OrderCard({
 
                   <div className="text-right shrink-0">
                     <span className="font-mono text-sm sm:text-base font-bold text-stone-900 tracking-wider">
-                      {countdown.formattedString}
+                      {countdown.compactString}
                     </span>
                   </div>
                 </div>

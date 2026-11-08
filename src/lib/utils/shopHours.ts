@@ -348,6 +348,7 @@ export interface CountdownResult {
   minutes: number;
   seconds: number;
   formattedString: string;
+  compactString: string;
   isExpired: boolean;
 }
 
@@ -368,7 +369,14 @@ export function useShopCountdown(targetDate?: Date | null): CountdownResult {
   }, [targetDate]);
 
   if (!targetDate || now === null) {
-    return { hours: 0, minutes: 0, seconds: 0, formattedString: '--h : --m : --s', isExpired: false };
+    return {
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      formattedString: '--h : --m : --s',
+      compactString: '--h --m',
+      isExpired: false,
+    };
   }
 
   const diffMs = Math.max(0, targetDate.getTime() - now);
@@ -382,11 +390,17 @@ export function useShopCountdown(targetDate?: Date | null): CountdownResult {
   const mStr = minutes.toString().padStart(2, '0');
   const sStr = seconds.toString().padStart(2, '0');
 
+  const compactString =
+    hours > 0
+      ? `${hours}h ${minutes.toString().padStart(2, '0')}m`
+      : `${minutes}m`;
+
   return {
     hours,
     minutes,
     seconds,
     formattedString: `${hStr}h : ${mStr}m : ${sStr}s`,
+    compactString,
     isExpired: totalSeconds <= 0,
   };
 }
