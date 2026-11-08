@@ -327,7 +327,7 @@ export default function AdminDashboardPage() {
       <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs px-3 sm:px-6 py-2.5 sm:py-3 w-full">
         <div className="max-w-5xl mx-auto flex items-center justify-between gap-2 sm:gap-4 min-w-0">
           {/* Left: Brand Identity with Live Status Indicator */}
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shadow-amber-500/20 shrink-0">
               <Wheat className="w-5 h-5" />
             </div>
@@ -336,58 +336,58 @@ export default function AdminDashboardPage() {
                 <h1 className="text-sm sm:text-lg font-black text-stone-900 tracking-tight leading-tight truncate">
                   {settings?.shop_name || 'Chakki Fresh'}
                 </h1>
-                <span className="text-[9px] sm:text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800 border border-amber-200 px-1.5 sm:px-2 py-0.5 rounded-md tracking-wider shrink-0">
+                <span className="text-[9px] sm:text-[10px] font-black uppercase bg-stone-900 text-white px-1.5 sm:px-2 py-0.5 rounded-md tracking-wider shrink-0 shadow-2xs">
                   Admin
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 text-[11px] text-stone-500 font-medium min-w-0">
+              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-stone-500 font-medium min-w-0">
                 <span className="flex items-center gap-1.5 min-w-0 truncate">
                   <span
                     className={`w-2 h-2 rounded-full shrink-0 ${
                       shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                     }`}
                   />
-                  <span className={`font-bold shrink-0 ${shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'}`}>
+                  <span className={`font-bold shrink-0 ${shopStatus.isOpen ? 'text-emerald-700' : 'text-amber-700'}`}>
                     {shopStatus.isOpen
                       ? 'Counter Open'
                       : shopStatus.isBreakActive
                       ? shopStatus.breakLabel || 'Break'
                       : 'Counter Closed'}
                   </span>
-                  <span className="truncate hidden xs:inline sm:inline">
+                  <span className="text-stone-400 truncate">
                     • {shopStatus.isOpen
                       ? `Closes ${formatTime12Hour(shopStatus.todaySchedule?.close)}`
                       : `Opens ${shopStatus.formattedNextOpen}`}
                   </span>
                 </span>
                 {displayRate && (
-                  <>
-                    <span className="hidden md:inline text-stone-300">•</span>
-                    <span className="hidden md:inline truncate">Rate: {currency} {displayRate}/kg</span>
-                  </>
+                  <span className="hidden md:inline text-stone-400 truncate">
+                    • Rate: {currency} {displayRate}/kg
+                  </span>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Right: Sleek, Uniform Action Buttons */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          {/* Right: Sleek, Unified Toolbar Capsule */}
+          <div className="flex items-center bg-stone-100/90 p-1 rounded-2xl border border-stone-200/80 shadow-2xs shrink-0">
             {/* Customer Storefront Link (Hidden on mobile for clean breathing room) */}
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden sm:inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="hidden sm:inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-900 hover:bg-white px-2.5 py-1.5 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Open customer view in new tab"
             >
               <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
-              <span>Customer View</span>
+              <span>Storefront</span>
             </a>
 
             {/* Refresh Button */}
             <button
+              type="button"
               onClick={handleRefresh}
-              className="p-2 sm:px-3 sm:py-2 text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold whitespace-nowrap"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 text-stone-600 hover:text-stone-900 hover:bg-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold"
               title="Refresh order pipeline"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-amber-600' : ''}`} />
@@ -398,20 +398,23 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/settings"
               prefetch={true}
-              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-800 bg-stone-50 hover:bg-stone-100 border border-stone-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 text-stone-600 hover:text-amber-800 hover:bg-white rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold"
               title="Shop Settings & Hours"
             >
               <SettingsIcon className="w-3.5 h-3.5 text-stone-600" />
               <span className="hidden sm:inline">Settings</span>
             </Link>
 
+            <div className="w-px h-4 bg-stone-300/70 mx-0.5" />
+
             {/* Sign Out Button */}
             <button
+              type="button"
               onClick={handleSignOut}
-              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-600 hover:text-rose-700 bg-stone-50 hover:bg-rose-50 border border-stone-200 hover:border-rose-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="p-1.5 sm:px-2.5 sm:py-1.5 text-stone-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold"
               title="Sign Out of Admin Portal"
             >
-              <LogOut className="w-3.5 h-3.5 text-stone-500 hover:text-rose-600" />
+              <LogOut className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Logout</span>
             </button>
           </div>
@@ -427,14 +430,14 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Main Content Area */}
-      <main suppressHydrationWarning className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6 min-w-0">
+      <main suppressHydrationWarning className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 min-w-0">
         {/* Top Header: Pipeline Title & Primary Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 min-w-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-1 min-w-0">
           <div className="min-w-0">
             <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight truncate">
               Order Pipeline
             </h2>
-            <p className="text-xs text-stone-500 font-medium mt-0.5 truncate sm:whitespace-normal">
+            <p className="text-xs text-stone-500 font-medium mt-0.5 truncate hidden sm:block">
               Live wheat milling queue, counter slip generation & QR pickup
             </p>
           </div>
