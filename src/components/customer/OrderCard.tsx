@@ -23,6 +23,10 @@ import {
   Download,
   Loader2,
   Lock,
+  Eye,
+  EyeOff,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -48,6 +52,7 @@ export default function OrderCard({
   const [isSaving, setIsSaving] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
   const [copiedPin, setCopiedPin] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   const handleCopyPin = () => {
     if (!order.access_code) return;
@@ -79,16 +84,22 @@ export default function OrderCard({
   const generateCardBlob = async (): Promise<Blob | null> => {
     if (!cardRef.current) return null;
 
-    // Direct DOM style overrides to guarantee 100% clean, unblurred, scannable QR in image export
+    // Direct DOM style overrides to guarantee 100% clean, unblurred, scannable QR & PIN in image export
     const qrElement = cardRef.current.querySelector('[data-qr-wrapper="true"]') as HTMLElement | null;
     const closedLabel = cardRef.current.querySelector('[data-closed-label="true"]') as HTMLElement | null;
     const cleanLabel = cardRef.current.querySelector('[data-clean-label="true"]') as HTMLElement | null;
     const captureHeader = cardRef.current.querySelector('[data-capture-header="true"]') as HTMLElement | null;
+    const pinDigits = cardRef.current.querySelector('[data-pin-digits="true"]') as HTMLElement | null;
 
     if (qrElement) {
       qrElement.style.filter = 'none';
       qrElement.style.setProperty('-webkit-filter', 'none');
       qrElement.style.opacity = '1';
+    }
+    if (pinDigits) {
+      pinDigits.style.filter = 'none';
+      pinDigits.style.setProperty('-webkit-filter', 'none');
+      pinDigits.style.opacity = '1';
     }
     if (closedLabel) closedLabel.style.display = 'none';
     if (cleanLabel) cleanLabel.style.display = 'block';
@@ -132,6 +143,11 @@ export default function OrderCard({
         qrElement.style.filter = '';
         qrElement.style.removeProperty('-webkit-filter');
         qrElement.style.opacity = '';
+      }
+      if (pinDigits && !showPin) {
+        pinDigits.style.filter = '';
+        pinDigits.style.removeProperty('-webkit-filter');
+        pinDigits.style.opacity = '';
       }
       if (closedLabel && showClosedState) closedLabel.style.display = '';
       if (cleanLabel && showClosedState) cleanLabel.style.display = 'none';
@@ -334,24 +350,59 @@ export default function OrderCard({
             </p>
           </div>
 
-          {/* 4-digit PIN badge - Tap to copy */}
+          {/* 4-digit PIN badge - Clean, compact, blurred normally with eye icon reveal */}
           {!isCompleted && order.access_code && (
-            <button
-              type="button"
-              data-no-capture="true"
-              onClick={handleCopyPin}
-              className={`rounded-2xl px-4 py-2 text-center shadow-xs shrink-0 cursor-pointer active:scale-95 transition-all ${
-                copiedPin ? 'bg-emerald-600 ring-2 ring-emerald-300' : 'bg-stone-900 hover:bg-stone-800'
-              }`}
-              title="Click or tap to copy PIN"
-            >
-              <span className="block text-[9px] font-bold text-amber-400 uppercase tracking-widest">
-                {copiedPin ? 'COPIED!' : 'PIN'}
-              </span>
-              <span className="block text-xl sm:text-2xl font-mono font-bold tracking-widest text-white leading-tight">
-                {order.access_code}
-              </span>
-            </button>
+            <div className="flex items-center gap-1.5 bg-stone-50 hover:bg-stone-100/80 border border-stone-200/90 rounded-2xl p-1.5 sm:px-2.5 sm:py-2 transition shadow-2xs shrink-0">
+              <div className="flex flex-col items-start pr-1">
+                <span className="text-[9px] font-bold uppercase tracking-wider text-stone-500 leading-none">
+                  PIN
+                </span>
+                <span
+                  data-pin-digits="true"
+                  onClick={handleCopyPin}
+                  className={`font-mono text-base sm:text-lg font-bold tracking-widest text-stone-900 cursor-pointer transition-all duration-200 leading-none mt-1 ${
+                    showPin
+                      ? 'filter-none select-all opacity-100'
+                      : 'filter blur-[4.5px] select-none opacity-60'
+                  }`}
+                  title={showPin ? 'Click to copy PIN' : 'Click eye to reveal PIN'}
+                >
+                  {order.access_code}
+                </span>
+              </div>
+
+              {/* Eye toggle button */}
+              <button
+                type="button"
+                data-no-capture="true"
+                onClick={() => setShowPin(!showPin)}
+                className="p-1.5 rounded-xl hover:bg-stone-200/70 text-stone-500 hover:text-stone-800 transition cursor-pointer active:scale-95"
+                title={showPin ? 'Hide PIN' : 'Reveal PIN'}
+                aria-label={showPin ? 'Hide PIN' : 'Reveal PIN'}
+              >
+                {showPin ? (
+                  <EyeOff className="w-4 h-4 text-amber-700" />
+                ) : (
+                  <Eye className="w-4 h-4 text-stone-500" />
+                )}
+              </button>
+
+              {/* Copy button */}
+              <button
+                type="button"
+                data-no-capture="true"
+                onClick={handleCopyPin}
+                className="p-1.5 rounded-xl hover:bg-stone-200/70 text-stone-500 hover:text-stone-800 transition cursor-pointer active:scale-95"
+                title="Copy PIN"
+                aria-label="Copy PIN"
+              >
+                {copiedPin ? (
+                  <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           )}
 
           {isCompleted && onRemove && (
@@ -567,19 +618,6 @@ export default function OrderCard({
                 {formatPrice(order.total_price, currency)}
               </span>
             </div>
-          </div>
-        )}
-
-        {/* Optional Helpline Button if Counter Phone is Configured */}
-        {settings?.phone_number && (
-          <div className="pt-2 text-center border-t border-stone-100">
-            <a
-              href={`tel:${settings.phone_number}`}
-              className="inline-flex items-center gap-1.5 text-[11px] font-bold text-stone-600 hover:text-amber-700 transition"
-            >
-              <Phone className="w-3 h-3 text-amber-600" />
-              <span>Questions? Call Counter {formatPhoneNumber(settings.phone_number)}</span>
-            </a>
           </div>
         )}
 
