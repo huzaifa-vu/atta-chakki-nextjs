@@ -61,8 +61,8 @@ export default function AdminOrderCard({
           : 'border-stone-200 shadow-xs'
       }`}
     >
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-stone-100 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           {/* Multi-Select Checkbox */}
           {onToggleSelect && !isCompleted && (
             <button
@@ -98,14 +98,14 @@ export default function AdminOrderCard({
             </span>
           </div>
 
-          <div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-extrabold text-stone-900 text-sm">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap min-w-0">
+              <h4 className="font-extrabold text-stone-900 text-sm truncate">
                 {order.customer_name ? order.customer_name : 'Customer'}
               </h4>
               <StatusBadge status={order.status} size="sm" />
             </div>
-            <span suppressHydrationWarning className="text-xs text-stone-500 block mt-0.5">
+            <span suppressHydrationWarning className="text-xs text-stone-500 block mt-0.5 truncate">
               Received at {formatDate(order.created_at)}
             </span>
           </div>

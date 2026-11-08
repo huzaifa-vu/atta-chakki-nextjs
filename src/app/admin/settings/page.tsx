@@ -276,7 +276,7 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] p-4 sm:p-6">
+    <div className="min-h-screen bg-[#faf8f5] p-4 sm:p-6 overflow-x-hidden w-full">
       <div className="max-w-xl mx-auto space-y-6">
         {/* Navigation Bar */}
         <div className="flex items-center justify-between">

@@ -322,39 +322,39 @@ export default function AdminDashboardPage() {
   const shopStatus = useShopOperatingStatus(settings);
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between pb-24">
+    <div className="min-h-screen bg-[#faf8f5] flex flex-col justify-between pb-24 w-full overflow-x-hidden">
       {/* Top Header - Clean, Modern Admin Navbar */}
-      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs px-4 sm:px-6 py-3">
-        <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-2xs px-3 sm:px-6 py-2.5 sm:py-3 w-full">
+        <div className="max-w-5xl mx-auto flex items-center justify-between gap-2 sm:gap-4 min-w-0">
           {/* Left: Brand Identity with Live Status Indicator */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shadow-sm shadow-amber-500/20 shrink-0">
               <Wheat className="w-5 h-5" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base sm:text-lg font-black text-stone-900 tracking-tight leading-tight">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <h1 className="text-sm sm:text-lg font-black text-stone-900 tracking-tight leading-tight truncate">
                   {settings?.shop_name || 'Chakki Fresh'}
                 </h1>
-                <span className="text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-md tracking-wider">
+                <span className="text-[9px] sm:text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800 border border-amber-200 px-1.5 sm:px-2 py-0.5 rounded-md tracking-wider shrink-0">
                   Admin
                 </span>
               </div>
-              <div className="flex items-center gap-2 mt-0.5 text-[11px] text-stone-500 font-medium">
-                <span className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1.5 sm:gap-2 mt-0.5 text-[11px] text-stone-500 font-medium min-w-0">
+                <span className="flex items-center gap-1.5 min-w-0 truncate">
                   <span
-                    className={`w-2 h-2 rounded-full ${
+                    className={`w-2 h-2 rounded-full shrink-0 ${
                       shopStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
                     }`}
                   />
-                  <span className={`font-bold ${shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'}`}>
+                  <span className={`font-bold shrink-0 ${shopStatus.isOpen ? 'text-emerald-800' : 'text-amber-800'}`}>
                     {shopStatus.isOpen
                       ? 'Counter Open'
                       : shopStatus.isBreakActive
                       ? shopStatus.breakLabel || 'Break'
                       : 'Counter Closed'}
                   </span>
-                  <span>
+                  <span className="truncate hidden xs:inline sm:inline">
                     • {shopStatus.isOpen
                       ? `Closes ${formatTime12Hour(shopStatus.todaySchedule?.close)}`
                       : `Opens ${shopStatus.formattedNextOpen}`}
@@ -362,8 +362,8 @@ export default function AdminDashboardPage() {
                 </span>
                 {displayRate && (
                   <>
-                    <span className="hidden sm:inline text-stone-300">•</span>
-                    <span className="hidden sm:inline">Rate: {currency} {displayRate}/kg</span>
+                    <span className="hidden md:inline text-stone-300">•</span>
+                    <span className="hidden md:inline truncate">Rate: {currency} {displayRate}/kg</span>
                   </>
                 )}
               </div>
@@ -371,13 +371,13 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Right: Sleek, Uniform Action Buttons */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Customer Storefront Link */}
             <a
               href="/"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Open customer view in new tab"
             >
               <ExternalLink className="w-3.5 h-3.5 text-stone-500" />
@@ -387,7 +387,7 @@ export default function AdminDashboardPage() {
             {/* Refresh Button */}
             <button
               onClick={handleRefresh}
-              className="p-2 sm:px-3 sm:py-2 text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold whitespace-nowrap"
+              className="p-2 sm:px-3 sm:py-2 text-stone-600 hover:text-stone-900 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold whitespace-nowrap"
               title="Refresh order pipeline"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-amber-600' : ''}`} />
@@ -398,7 +398,7 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/settings"
               prefetch={true}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-800 bg-amber-50/70 hover:bg-amber-100 border border-amber-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-800 bg-amber-50/70 hover:bg-amber-100 border border-amber-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Shop Settings & Hours"
             >
               <SettingsIcon className="w-3.5 h-3.5 text-amber-700" />
@@ -408,7 +408,7 @@ export default function AdminDashboardPage() {
             {/* Sign Out Button */}
             <button
               onClick={handleSignOut}
-              className="inline-flex items-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-3 py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 p-2 sm:px-3 sm:py-2 rounded-xl transition cursor-pointer whitespace-nowrap"
               title="Sign Out of Admin Portal"
             >
               <LogOut className="w-3.5 h-3.5 text-rose-600" />
@@ -427,134 +427,134 @@ export default function AdminDashboardPage() {
       )}
 
       {/* Main Content Area */}
-      <main suppressHydrationWarning className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6">
+      <main suppressHydrationWarning className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-6 min-w-0">
         {/* Top Header: Pipeline Title & Primary Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1 min-w-0">
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight">
+              <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight truncate">
                 Order Pipeline
               </h2>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 Live
               </span>
             </div>
-            <p className="text-xs text-stone-500 font-medium mt-0.5">
+            <p className="text-xs text-stone-500 font-medium mt-0.5 truncate sm:whitespace-normal">
               Live wheat milling queue, counter slip generation & QR pickup
             </p>
           </div>
 
           {/* Action Buttons: Scan Pickup QR & New Order */}
-          <div className="flex items-center gap-2.5">
+          <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 sm:gap-2.5 w-full sm:w-auto">
             <button
               onClick={() => setIsAdminScannerOpen(true)}
-              className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 active:scale-95 transition flex items-center justify-center gap-2 cursor-pointer shadow-xs"
+              className="w-full sm:w-auto py-2.5 px-3 sm:px-4 rounded-xl font-bold text-xs sm:text-sm text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 active:scale-95 transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer shadow-xs whitespace-nowrap"
               title="Scan customer pickup QR code to auto-complete"
             >
-              <Camera className="w-4 h-4 text-emerald-700" />
+              <Camera className="w-4 h-4 text-emerald-700 shrink-0" />
               <span>Scan Pickup QR</span>
             </button>
 
             <button
               onClick={() => setIsNewOrderModalOpen(true)}
-              className="flex-1 sm:flex-initial py-2.5 px-4 rounded-xl font-black text-xs sm:text-sm text-white bg-amber-600 hover:bg-amber-700 active:scale-95 transition shadow-md shadow-amber-600/20 flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto py-2.5 px-3 sm:px-4 rounded-xl font-black text-xs sm:text-sm text-white bg-amber-600 hover:bg-amber-700 active:scale-95 transition shadow-md shadow-amber-600/20 flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap"
             >
-              <Plus className="w-4 h-4 stroke-[3]" />
+              <Plus className="w-4 h-4 stroke-[3] shrink-0" />
               <span>New Order</span>
             </button>
           </div>
         </div>
 
         {/* KPI Summary Cards (Clickable Quick Filters) */}
-        <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full min-w-0">
           <button
             type="button"
             onClick={() => setActiveTab('queued')}
-            className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
+            className={`text-left p-2.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group min-w-0 ${
               activeTab === 'queued'
                 ? 'bg-amber-50/90 border-amber-300 ring-2 ring-amber-200 shadow-sm'
                 : 'bg-white hover:bg-amber-50/40 border-stone-200/90 hover:border-amber-200 shadow-2xs'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-amber-800 flex items-center gap-1.5">
-                <Clock className="w-3.5 h-3.5 text-amber-600" />
-                In Queue
+            <div className="flex items-center justify-between min-w-0">
+              <span className="text-[11px] sm:text-xs font-bold text-amber-800 flex items-center gap-1 sm:gap-1.5 truncate">
+                <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                <span className="truncate">In Queue</span>
               </span>
               <span className="text-[10px] text-stone-600 font-medium hidden sm:inline">
                 Waiting
               </span>
             </div>
-            <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+            <div className="mt-1.5 sm:mt-2 flex items-baseline gap-1 sm:gap-1.5 truncate">
+              <span className="text-xl sm:text-3xl font-black text-stone-900 tracking-tight">
                 {queuedOrders.length}
               </span>
-              <span className="text-xs text-stone-600 font-semibold">orders</span>
+              <span className="text-[11px] sm:text-xs text-stone-600 font-semibold">orders</span>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('grinding')}
-            className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
+            className={`text-left p-2.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group min-w-0 ${
               activeTab === 'grinding'
                 ? 'bg-blue-50/90 border-blue-300 ring-2 ring-blue-200 shadow-sm'
                 : 'bg-white hover:bg-blue-50/40 border-stone-200/90 hover:border-blue-200 shadow-2xs'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-blue-800 flex items-center gap-1.5">
-                <Flame className="w-3.5 h-3.5 text-blue-600" />
-                Grinding
+            <div className="flex items-center justify-between min-w-0">
+              <span className="text-[11px] sm:text-xs font-bold text-blue-800 flex items-center gap-1 sm:gap-1.5 truncate">
+                <Flame className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span className="truncate">Grinding</span>
               </span>
               <span className="text-[10px] text-stone-600 font-medium hidden sm:inline">
                 In Mill
               </span>
             </div>
-            <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+            <div className="mt-1.5 sm:mt-2 flex items-baseline gap-1 sm:gap-1.5 truncate">
+              <span className="text-xl sm:text-3xl font-black text-stone-900 tracking-tight">
                 {grindingOrders.length}
               </span>
-              <span className="text-xs text-stone-600 font-semibold">orders</span>
+              <span className="text-[11px] sm:text-xs text-stone-600 font-semibold">orders</span>
             </div>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab('ready')}
-            className={`text-left p-3.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group ${
+            className={`text-left p-2.5 sm:p-4 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group min-w-0 ${
               activeTab === 'ready'
                 ? 'bg-emerald-50/90 border-emerald-300 ring-2 ring-emerald-200 shadow-sm'
                 : 'bg-white hover:bg-emerald-50/40 border-stone-200/90 hover:border-emerald-200 shadow-2xs'
             }`}
           >
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-emerald-800 flex items-center gap-1.5">
-                <ShoppingBag className="w-3.5 h-3.5 text-emerald-600" />
-                Ready
+            <div className="flex items-center justify-between min-w-0">
+              <span className="text-[11px] sm:text-xs font-bold text-emerald-800 flex items-center gap-1 sm:gap-1.5 truncate">
+                <ShoppingBag className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span className="truncate">Ready</span>
               </span>
               <span className="text-[10px] text-stone-600 font-medium hidden sm:inline">
                 At Counter
               </span>
             </div>
-            <div className="mt-2 flex items-baseline gap-1.5">
-              <span className="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight">
+            <div className="mt-1.5 sm:mt-2 flex items-baseline gap-1 sm:gap-1.5 truncate">
+              <span className="text-xl sm:text-3xl font-black text-stone-900 tracking-tight">
                 {readyOrders.length}
               </span>
-              <span className="text-xs text-stone-600 font-semibold">orders</span>
+              <span className="text-[11px] sm:text-xs text-stone-600 font-semibold">orders</span>
             </div>
           </button>
         </div>
 
         {/* Generous Spacing Buffer & Divider before Tabs */}
-        <div className="pt-4 space-y-4">
-          {/* Segmented Filter Navigation Tabs */}
-          <div className="flex items-center justify-between gap-3 flex-wrap border-b border-stone-200/80 pb-3">
-            <div className="bg-stone-100/90 p-1 rounded-2xl border border-stone-200/70 inline-flex items-center gap-1 overflow-x-auto max-w-full scrollbar-none shadow-2xs">
+        <div className="pt-2 sm:pt-4 space-y-4 w-full min-w-0">
+          {/* Segmented Filter Navigation Tabs - Horizontally scrollable without breaking parent */}
+          <div className="w-full border-b border-stone-200/80 pb-3 overflow-x-auto no-scrollbar -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="bg-stone-100/90 p-1 rounded-2xl border border-stone-200/70 inline-flex items-center gap-1 shadow-2xs min-w-max">
               <button
                 onClick={() => setActiveTab('all_active')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'all_active'
                     ? 'bg-white text-stone-900 shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -565,7 +565,7 @@ export default function AdminDashboardPage() {
 
               <button
                 onClick={() => setActiveTab('queued')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'queued'
                     ? 'bg-amber-600 text-white shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -576,7 +576,7 @@ export default function AdminDashboardPage() {
 
               <button
                 onClick={() => setActiveTab('grinding')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'grinding'
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -587,7 +587,7 @@ export default function AdminDashboardPage() {
 
               <button
                 onClick={() => setActiveTab('ready')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'ready'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -598,7 +598,7 @@ export default function AdminDashboardPage() {
 
               <button
                 onClick={() => setActiveTab('completed')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
+                className={`px-3 sm:px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition cursor-pointer ${
                   activeTab === 'completed'
                     ? 'bg-stone-800 text-white shadow-xs'
                     : 'text-stone-600 hover:text-stone-900'
@@ -610,16 +610,16 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Smart Batch Selection Toolbar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 pt-1 pb-1">
-            <div className="flex items-center gap-2 flex-wrap text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 pb-1 w-full min-w-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap text-xs">
               {queuedOrders.length > 0 && (
                 <button
                   type="button"
                   onClick={handleSelectAllInQueue}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 transition cursor-pointer text-xs"
                 >
-                  <CheckSquare className="w-3.5 h-3.5 text-amber-600" />
-                  Select All In Queue ({queuedOrders.length})
+                  <CheckSquare className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                  <span>Select All In Queue ({queuedOrders.length})</span>
                 </button>
               )}
 
@@ -627,10 +627,10 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={handleSelectAllGrinding}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold bg-blue-50 hover:bg-blue-100 text-blue-900 border border-blue-200 transition cursor-pointer text-xs"
                 >
-                  <CheckSquare className="w-3.5 h-3.5 text-blue-600" />
-                  Select All Grinding ({grindingOrders.length})
+                  <CheckSquare className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                  <span>Select All Grinding ({grindingOrders.length})</span>
                 </button>
               )}
 
@@ -638,10 +638,10 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={handleSelectAllReady}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200 transition cursor-pointer text-xs"
                 >
-                  <CheckSquare className="w-3.5 h-3.5 text-emerald-600" />
-                  Select All Ready ({readyOrders.length})
+                  <CheckSquare className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Select All Ready ({readyOrders.length})</span>
                 </button>
               )}
 
@@ -649,15 +649,15 @@ export default function AdminDashboardPage() {
                 <button
                   type="button"
                   onClick={handleClearSelection}
-                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-semibold text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition cursor-pointer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl font-semibold text-stone-500 hover:text-stone-800 hover:bg-stone-100 transition cursor-pointer text-xs"
                 >
-                  <X className="w-3.5 h-3.5" />
-                  Deselect All
+                  <X className="w-3.5 h-3.5 shrink-0" />
+                  <span>Deselect All</span>
                 </button>
               )}
             </div>
 
-            <span className="text-[11px] text-stone-500 font-medium">
+            <span className="text-[11px] text-stone-500 font-medium truncate">
               {selectedStatus ? `Selecting ${selectedStatus.toUpperCase()} bags only` : 'Select one status type at a time'}
             </span>
           </div>
