@@ -48,7 +48,7 @@ export default function AdminLoginPage() {
           <div className="w-12 h-12 mx-auto rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/25">
             <Wheat className="w-6 h-6" />
           </div>
-          <h1 className="text-xl font-black text-stone-900 tracking-tight">
+          <h1 className="text-xl font-extrabold text-stone-900 tracking-tight">
             Shopkeeper Login
           </h1>
           <p className="text-xs text-stone-600">

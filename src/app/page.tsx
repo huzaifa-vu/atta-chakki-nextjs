@@ -219,7 +219,7 @@ export default function CustomerDashboard() {
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h1 className="text-base sm:text-lg font-black text-stone-900 tracking-tight leading-none truncate">
+                <h1 className="text-base sm:text-lg font-extrabold text-stone-900 tracking-tight leading-none truncate">
                   {shopName}
                 </h1>
                 <span

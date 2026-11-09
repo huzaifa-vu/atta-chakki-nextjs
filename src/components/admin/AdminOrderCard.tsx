@@ -90,7 +90,7 @@ export default function AdminOrderCard({
           {/* Row 1: Customer Name + Date of Completion (Left) & Payment + Delete (Right) */}
           <div className="flex items-center justify-between gap-2 min-w-0">
             <div className="min-w-0 flex-1">
-              <h4 className="font-black text-stone-900 text-sm sm:text-base tracking-tight truncate">
+              <h4 className="font-extrabold text-stone-900 text-sm sm:text-base tracking-tight truncate">
                 {order.customer_name ? order.customer_name : 'Customer'}
               </h4>
               <div className="flex items-center gap-1.5 text-[11px] text-stone-500 font-medium mt-0.5">
@@ -188,7 +188,7 @@ export default function AdminOrderCard({
                 )}
 
                 {/* Customer Name */}
-                <h4 className="font-black text-stone-900 text-sm sm:text-base tracking-tight truncate">
+                <h4 className="font-extrabold text-stone-900 text-sm sm:text-base tracking-tight truncate">
                   {order.customer_name ? order.customer_name : 'Customer'}
                 </h4>
 

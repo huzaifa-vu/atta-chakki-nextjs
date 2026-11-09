@@ -388,7 +388,7 @@ export default function AdminDashboardPage() {
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 sm:gap-2">
-                <h1 className="text-sm sm:text-lg font-black text-stone-900 tracking-tight leading-tight truncate">
+                <h1 className="text-sm sm:text-lg font-extrabold text-stone-900 tracking-tight leading-tight truncate">
                   {settings?.shop_name || 'Chakki Waly'}
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-black uppercase bg-stone-900 text-white px-1.5 sm:px-2 py-0.5 rounded-md tracking-wider shrink-0 shadow-2xs">
@@ -486,7 +486,7 @@ export default function AdminDashboardPage() {
         {/* Top Header: Pipeline Title & Primary Actions */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 pb-1 min-w-0">
           <div className="min-w-0">
-            <h2 className="text-xl sm:text-2xl font-black text-stone-900 tracking-tight truncate">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-stone-900 tracking-tight truncate">
               Order Pipeline
             </h2>
             <p className="text-xs text-stone-500 font-medium mt-0.5 truncate hidden sm:block">
