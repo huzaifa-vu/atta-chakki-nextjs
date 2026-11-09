@@ -20,6 +20,46 @@ export function formatDate(dateString: string) {
 }
 
 /**
+ * Formats order completion timestamp with intelligent relative day & 12-hr time.
+ * e.g., "Today at 2:15 PM", "Yesterday at 6:40 PM", or "Oct 24, 11:30 AM".
+ */
+export function formatCompletionDate(dateString?: string | null): string {
+  if (!dateString) return 'Completed';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Completed';
+
+  const now = new Date();
+  const isToday =
+    date.getDate() === now.getDate() &&
+    date.getMonth() === now.getMonth() &&
+    date.getFullYear() === now.getFullYear();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const isYesterday =
+    date.getDate() === yesterday.getDate() &&
+    date.getMonth() === yesterday.getMonth() &&
+    date.getFullYear() === yesterday.getFullYear();
+
+  const timeStr = date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+
+  if (isToday) return `Today at ${timeStr}`;
+  if (isYesterday) return `Yesterday at ${timeStr}`;
+
+  const dateStr = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+
+  return `${dateStr}, ${timeStr}`;
+}
+
+/**
  * Formats a phone number cleanly into standard 03XX-XXX-XXXX format.
  * Gracefully normalizes +92, 92, and unformatted digits.
  */

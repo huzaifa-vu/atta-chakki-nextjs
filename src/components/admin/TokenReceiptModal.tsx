@@ -55,7 +55,8 @@ export default function TokenReceiptModal({
   };
 
   const handleWhatsAppShare = () => {
-    const text = `Hello ${order.customer_name || 'Customer'}! Your atta order (${formatWeight(order.weight_kg)}, ${formatPrice(order.total_price, currency)}) has been received at ${shopName}.\n\nYour 4-Digit Access PIN is: ${order.access_code}\nTrack live grinding progress here:\n${trackingUrl}`;
+    const pinText = order.access_code ? `\n\nYour 4-Digit Access PIN is: ${order.access_code}` : '';
+    const text = `Hello ${order.customer_name || 'Customer'}! Your atta order (${formatWeight(order.weight_kg)}, ${formatPrice(order.total_price, currency)}) has been processed at ${shopName}.${pinText}\nTrack live grinding progress here:\n${trackingUrl}`;
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
@@ -74,29 +75,39 @@ export default function TokenReceiptModal({
             <div className="bg-gradient-to-r from-amber-500 to-amber-600 px-6 py-4 text-white flex items-center justify-between">
               <div>
                 <span className="text-[11px] font-bold uppercase tracking-wider text-amber-100">
-                  Order Successfully Created
+                  {order.status === 'completed'
+                    ? 'Completed Order Slip'
+                    : order.access_code
+                    ? 'Order Successfully Created'
+                    : 'Customer Order Receipt'}
                 </span>
-                <button
-                  type="button"
-                  onClick={handleCopyPin}
-                  className="flex items-center gap-2 text-xl font-black text-white hover:text-amber-100 active:scale-95 transition cursor-pointer group text-left"
-                  title="Click to copy PIN"
-                >
-                  <span>PIN: {order.access_code}</span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 group-hover:bg-white/30 transition flex items-center gap-1">
-                    {copiedPin ? (
-                      <>
-                        <Check className="w-3 h-3 text-white stroke-[3]" />
-                        <span>Copied!</span>
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3 h-3 text-white/80" />
-                        <span>Copy</span>
-                      </>
-                    )}
-                  </span>
-                </button>
+                {order.access_code ? (
+                  <button
+                    type="button"
+                    onClick={handleCopyPin}
+                    className="flex items-center gap-2 text-xl font-black text-white hover:text-amber-100 active:scale-95 transition cursor-pointer group text-left"
+                    title="Click to copy PIN"
+                  >
+                    <span>PIN: {order.access_code}</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 group-hover:bg-white/30 transition flex items-center gap-1">
+                      {copiedPin ? (
+                        <>
+                          <Check className="w-3 h-3 text-white stroke-[3]" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3 h-3 text-white/80" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </span>
+                  </button>
+                ) : (
+                  <div className="text-xl font-black text-white">
+                    {order.customer_name || 'Customer Order'}
+                  </div>
+                )}
               </div>
               <button
                 onClick={onClose}
