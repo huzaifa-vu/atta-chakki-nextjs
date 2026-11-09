@@ -129,17 +129,23 @@ export default function AdminDashboardPage() {
 
   // Single status transition handler
   const handleUpdateStatus = async (orderId: string, nextStatus: OrderStatus) => {
+    const updateData: Partial<Order> = {
+      status: nextStatus,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (nextStatus === 'completed') {
+      updateData.access_code = null;
+      updateData.completed_at = new Date().toISOString();
+    }
+
+    // Optimistically update local state so card animates immediately
+    setOrders((prev) =>
+      prev.map((ord) => (ord.id === orderId ? { ...ord, ...updateData } : ord))
+    );
+    setSelectedOrderIds((prev) => prev.filter((id) => id !== orderId));
+
     try {
-      const updateData: Partial<Order> = {
-        status: nextStatus,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (nextStatus === 'completed') {
-        updateData.access_code = null;
-        updateData.completed_at = new Date().toISOString();
-      }
-
       const { error } = await supabase
         .from('orders')
         .update(updateData)
@@ -148,6 +154,7 @@ export default function AdminDashboardPage() {
       if (error) throw error;
     } catch (e) {
       console.error('Failed to update status', e);
+      fetchOrders();
       alert('Failed to update status.');
     }
   };
@@ -283,7 +290,25 @@ export default function AdminDashboardPage() {
   };
 
   const handleAutoCompletedFromQR = (completedOrd: Order) => {
-    setToastMessage(`✓ Pickup verified! Order for ${completedOrd.customer_name || 'Customer'} marked Completed & Handed Over!`);
+    // Optimistically update orders in state so the card animates out immediately
+    setOrders((prev) =>
+      prev.map((ord) =>
+        ord.id === completedOrd.id
+          ? {
+              ...ord,
+              status: 'completed' as OrderStatus,
+              access_code: null,
+              completed_at: new Date().toISOString(),
+            }
+          : ord
+      )
+    );
+    setSelectedOrderIds((prev) => prev.filter((id) => id !== completedOrd.id));
+
+    const pinLabel = completedOrd.access_code ? ` (PIN ${completedOrd.access_code})` : '';
+    setToastMessage(
+      `✓ Pickup verified! Order for ${completedOrd.customer_name || 'Customer'}${pinLabel} marked Completed & Handed Over!`
+    );
     setTimeout(() => setToastMessage(null), 4500);
   };
 
@@ -421,13 +446,23 @@ export default function AdminDashboardPage() {
         </div>
       </header>
 
-      {/* Toast Alert */}
-      {toastMessage && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-stone-900 text-white px-5 py-3 rounded-2xl shadow-xl flex items-center gap-2 text-xs font-bold animate-bounce">
-          <CheckCircle2 className="w-4 h-4 text-amber-400" />
-          <span>{toastMessage}</span>
-        </div>
-      )}
+      {/* High-Visibility Success Toast Alert */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -24, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+            className="fixed top-16 sm:top-20 left-1/2 -translate-x-1/2 z-50 bg-stone-900/95 backdrop-blur-md text-white px-4 sm:px-6 py-3 rounded-2xl shadow-2xl border border-stone-700/80 flex items-center gap-2.5 text-xs sm:text-sm font-bold max-w-[92vw] sm:max-w-lg text-center"
+          >
+            <div className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+            </div>
+            <span className="truncate">{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content Area */}
       <main suppressHydrationWarning className="flex-1 max-w-5xl w-full mx-auto p-4 sm:p-6 space-y-4 sm:space-y-6 min-w-0">
@@ -775,7 +810,7 @@ export default function AdminDashboardPage() {
             </div>
           ) : displayedOrders.length > 0 ? (
             <div className="space-y-3">
-              <AnimatePresence>
+              <AnimatePresence mode="popLayout">
                 {displayedOrders.map((order) => (
                   <AdminOrderCard
                     key={order.id}

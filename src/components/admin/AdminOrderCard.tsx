@@ -58,10 +58,16 @@ export default function AdminOrderCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      className={`rounded-2xl bg-white border p-4 sm:p-5 transition-all duration-200 ${
+      initial={{ opacity: 0, y: 12, scale: 0.98 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{
+        opacity: 0,
+        scale: 0.88,
+        y: -16,
+        transition: { duration: 0.28, ease: [0.32, 0.72, 0, 1] },
+      }}
+      transition={{ layout: { duration: 0.28, ease: 'easeOut' } }}
+      className={`rounded-2xl bg-white border p-4 sm:p-5 transition-colors duration-200 ${
         isSelected
           ? 'border-amber-400 ring-2 ring-amber-500 bg-amber-50/20 shadow-md'
           : isReady
