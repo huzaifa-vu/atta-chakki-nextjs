@@ -346,7 +346,7 @@ export default function AdminSettingsPage() {
             <Store className="w-5 h-5 text-amber-700" />
           </div>
           <div>
-            <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight leading-tight">
+            <h1 className="text-lg sm:text-xl font-extrabold text-stone-900 tracking-tight leading-normal pb-0.5">
               Shop Settings
             </h1>
             <p className="text-xs text-stone-500 font-medium">
