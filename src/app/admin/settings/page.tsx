@@ -504,15 +504,15 @@ export default function AdminSettingsPage() {
               </div>
             </div>
 
-            {/* Emergency / Holiday Override */}
+            {/* Temporary Shop Closure Toggle */}
             <div className="pt-3 border-t border-stone-100 space-y-2">
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-xs font-bold text-stone-900 block">
-                    Emergency Closure Override
+                    Temporarily Close Shop
                   </span>
                   <span className="text-[11px] text-stone-500 block">
-                    Temporarily mark shop closed immediately
+                    Mark shop closed right now (e.g. power cut, rain, emergency)
                   </span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
@@ -532,7 +532,7 @@ export default function AdminSettingsPage() {
                     type="text"
                     value={closedReason}
                     onChange={(e) => setClosedReason(e.target.value)}
-                    placeholder="Notice e.g. Closed for Maintenance until 4 PM"
+                    placeholder="Reason for customers (e.g. Power cut, back at 4 PM)"
                     className="w-full px-3 py-2 text-xs rounded-xl border border-rose-200 bg-rose-50/80 text-rose-900 placeholder-rose-400 focus:outline-none focus:border-rose-400"
                   />
                 </div>
