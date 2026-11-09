@@ -287,13 +287,9 @@ export default function OrderCard({
                 </span>
               )}
 
-              {order.is_paid ? (
+              {order.is_paid && (
                 <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Paid
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-stone-600 bg-stone-100 px-2.5 py-0.5 rounded-lg border border-stone-200">
-                  <Clock className="w-3.5 h-3.5 text-amber-600" /> Pay on Pickup
                 </span>
               )}
             </div>
