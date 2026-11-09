@@ -15,7 +15,6 @@ import {
   Wheat,
   Plus,
   Settings as SettingsIcon,
-  LogOut,
   RefreshCw,
   Clock,
   Flame,
@@ -278,11 +277,6 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.replace('/admin/login');
-  };
-
   const handleOrderCreated = (newOrder: Order) => {
     setIsNewOrderModalOpen(false);
     setSelectedReceiptOrder(newOrder);
@@ -429,19 +423,6 @@ export default function AdminDashboardPage() {
               <SettingsIcon className="w-3.5 h-3.5 text-stone-600" />
               <span className="hidden sm:inline">Settings</span>
             </Link>
-
-            <div className="w-px h-4 bg-stone-300/70 mx-0.5" />
-
-            {/* Sign Out Button */}
-            <button
-              type="button"
-              onClick={handleSignOut}
-              className="p-1.5 sm:px-2.5 sm:py-1.5 text-stone-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 text-xs font-semibold"
-              title="Sign Out of Admin Portal"
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Logout</span>
-            </button>
           </div>
         </div>
       </header>

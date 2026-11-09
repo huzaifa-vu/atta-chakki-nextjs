@@ -31,8 +31,10 @@ import {
   Check,
   Sparkles,
   Wheat,
+  LogOut,
+  Loader2,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CACHE_KEY = 'chakki_cached_settings';
 
@@ -54,6 +56,10 @@ export default function AdminSettingsPage() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(
     null
   );
+
+  // Sign out confirmation states
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const supabase = createClient();
 
@@ -276,6 +282,17 @@ export default function AdminSettingsPage() {
     setTimeout(() => setFeedback(null), 3500);
   };
 
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      await supabase.auth.signOut();
+      router.replace('/admin/login');
+    } catch (err) {
+      console.error('Sign out error:', err);
+      window.location.href = '/admin/login';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#faf8f5] p-3.5 sm:p-6 overflow-x-hidden w-full">
       <div className="max-w-lg mx-auto space-y-4 sm:space-y-5">
@@ -310,6 +327,16 @@ export default function AdminSettingsPage() {
                 Saved & Live
               </span>
             )}
+
+            <button
+              type="button"
+              onClick={() => setShowSignOutConfirm(true)}
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600 hover:text-rose-700 bg-white hover:bg-rose-50 border border-stone-200/80 hover:border-rose-200 px-3 py-1.5 rounded-full transition shadow-2xs cursor-pointer active:scale-95"
+              title="Sign Out of Admin Portal"
+            >
+              <LogOut className="w-3.5 h-3.5 text-stone-500 hover:text-rose-600" />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
 
@@ -636,6 +663,36 @@ export default function AdminSettingsPage() {
             )}
           </button>
         </form>
+
+        {/* CARD 4: Admin Account & Sign Out */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-rose-50 border border-rose-200/60 text-rose-600 flex items-center justify-center shrink-0">
+              <LogOut className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">
+                Admin Session
+              </h2>
+              <p className="text-[11px] text-stone-500">
+                Sign out of the admin panel on this device
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowSignOutConfirm(true)}
+            className="w-full sm:w-auto px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition cursor-pointer active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+          >
+            <LogOut className="w-3.5 h-3.5" />
+            <span>Sign Out</span>
+          </button>
+        </motion.div>
       </div>
 
       {/* Pop-up Weekly Schedule & Breaks Modal */}
@@ -645,6 +702,62 @@ export default function AdminSettingsPage() {
         initialSchedule={weeklySchedule}
         onSave={handleSaveWeeklySchedule}
       />
+
+      {/* Sign Out Confirmation Modal */}
+      <AnimatePresence>
+        {showSignOutConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              className="w-full max-w-sm rounded-3xl bg-white shadow-2xl border border-stone-200 overflow-hidden p-6 space-y-4 text-center"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200/70 text-rose-600 flex items-center justify-center mx-auto shadow-2xs">
+                <LogOut className="w-6 h-6" />
+              </div>
+
+              <div className="space-y-1">
+                <h3 className="text-base font-black text-stone-900">
+                  Sign out of Admin?
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed max-w-xs mx-auto">
+                  You will need your admin credentials to log back in and manage orders or shop settings.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5 pt-1">
+                <button
+                  type="button"
+                  disabled={isSigningOut}
+                  onClick={() => setShowSignOutConfirm(false)}
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-stone-700 bg-stone-100 hover:bg-stone-200 active:scale-95 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={isSigningOut}
+                  onClick={handleSignOut}
+                  className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-95 transition shadow-sm shadow-rose-600/30 flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isSigningOut ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Signing out...</span>
+                    </>
+                  ) : (
+                    <>
+                      <LogOut className="w-3.5 h-3.5" />
+                      <span>Yes, Sign Out</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
