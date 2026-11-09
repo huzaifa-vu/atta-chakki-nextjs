@@ -48,6 +48,7 @@ export default function OrderCard({
   onRemove,
 }: OrderCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
+  const exportSlipRef = useRef<HTMLDivElement>(null);
   const [isSharing, setIsSharing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState<string | null>(null);
@@ -81,80 +82,34 @@ export default function OrderCard({
     setTimeout(() => setFeedbackToast(null), 3500);
   };
 
+  // Dedicated clean export using off-screen unblurred slip template
   const generateCardBlob = async (): Promise<Blob | null> => {
-    if (!cardRef.current) return null;
-
-    // Direct DOM style overrides to guarantee 100% clean, unblurred, scannable QR & PIN in image export
-    const qrElement = cardRef.current.querySelector('[data-qr-wrapper="true"]') as HTMLElement | null;
-    const closedLabel = cardRef.current.querySelector('[data-closed-label="true"]') as HTMLElement | null;
-    const cleanLabel = cardRef.current.querySelector('[data-clean-label="true"]') as HTMLElement | null;
-    const captureHeader = cardRef.current.querySelector('[data-capture-header="true"]') as HTMLElement | null;
-    const pinDigits = cardRef.current.querySelector('[data-pin-digits="true"]') as HTMLElement | null;
-
-    if (qrElement) {
-      qrElement.style.filter = 'none';
-      qrElement.style.setProperty('-webkit-filter', 'none');
-      qrElement.style.opacity = '1';
-    }
-    if (pinDigits) {
-      pinDigits.style.filter = 'none';
-      pinDigits.style.setProperty('-webkit-filter', 'none');
-      pinDigits.style.opacity = '1';
-    }
-    if (closedLabel) closedLabel.style.display = 'none';
-    if (cleanLabel) cleanLabel.style.display = 'block';
-    if (captureHeader && showClosedState) {
-      captureHeader.classList.remove('hidden');
-      captureHeader.classList.add('flex');
-    }
+    const targetElement = exportSlipRef.current || cardRef.current;
+    if (!targetElement) return null;
 
     const options = {
-      quality: 0.95,
+      quality: 0.98,
       pixelRatio: 2,
       backgroundColor: '#ffffff',
       skipFonts: true,
       cacheBust: true,
-      filter: (node: HTMLElement) => {
-        if (node.getAttribute && node.getAttribute('data-no-capture') === 'true') {
-          return false;
-        }
-        return true;
-      },
     };
 
     let resultBlob: Blob | null = null;
     try {
       try {
-        resultBlob = await toBlob(cardRef.current, options);
+        resultBlob = await toBlob(targetElement, options);
       } catch (err) {
         console.warn('html-to-image toBlob issue, attempting toPng fallback:', err);
       }
 
       if (!resultBlob) {
-        const dataUrl = await toPng(cardRef.current, options);
+        const dataUrl = await toPng(targetElement, options);
         const res = await fetch(dataUrl);
         resultBlob = await res.blob();
       }
     } catch (fallbackErr) {
       console.error('All image capture methods failed:', fallbackErr);
-    } finally {
-      // Restore live screen presentation immediately
-      if (qrElement && showClosedState) {
-        qrElement.style.filter = '';
-        qrElement.style.removeProperty('-webkit-filter');
-        qrElement.style.opacity = '';
-      }
-      if (pinDigits && !showPin) {
-        pinDigits.style.filter = '';
-        pinDigits.style.removeProperty('-webkit-filter');
-        pinDigits.style.opacity = '';
-      }
-      if (closedLabel && showClosedState) closedLabel.style.display = '';
-      if (cleanLabel && showClosedState) cleanLabel.style.display = 'none';
-      if (captureHeader && showClosedState) {
-        captureHeader.classList.add('hidden');
-        captureHeader.classList.remove('flex');
-      }
     }
 
     return resultBlob;
@@ -259,8 +214,9 @@ export default function OrderCard({
   };
 
   return (
-    <motion.div
-      ref={cardRef}
+    <>
+      <motion.div
+        ref={cardRef}
       layout
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
@@ -614,10 +570,103 @@ export default function OrderCard({
               <Wheat className="w-3 h-3 text-amber-500" />
               {settings?.shop_name || 'Chakki Fresh'} Collection Slip
             </span>
-            <span className="font-mono text-stone-500 font-bold">PIN: {order.access_code}</span>
+            <span className="text-stone-400 font-medium">Ready for Counter Pickup</span>
           </div>
         )}
       </div>
     </motion.div>
-  );
+
+    {/* Dedicated Off-Screen Pickup Slip Template for High-Res, 100% Unblurred Export */}
+    <div
+      style={{
+        position: 'fixed',
+        left: '-9999px',
+        top: '-9999px',
+        width: '400px',
+        pointerEvents: 'none',
+        zIndex: -1,
+      }}
+      aria-hidden="true"
+    >
+      <div
+        ref={exportSlipRef}
+        className="w-[400px] bg-white p-6 rounded-3xl border border-stone-200 text-stone-900 shadow-xl space-y-4 font-sans"
+      >
+        {/* Shop Branding Header */}
+        <div className="flex items-center justify-between pb-3 border-b border-stone-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold shadow-sm shadow-amber-500/20">
+              <Wheat className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-black text-sm text-stone-900 leading-tight">
+                {settings?.shop_name || 'Chakki Fresh'}
+              </h3>
+              <p className="text-[10px] text-stone-500 font-medium">Official Pickup Slip</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full">
+            Ready for Collection
+          </span>
+        </div>
+
+        {/* Customer Name */}
+        <div className="text-center pt-1">
+          <span className="text-[10px] font-extrabold uppercase tracking-wider text-stone-400 block">
+            Customer
+          </span>
+          <h4 className="text-lg font-black text-stone-900 mt-0.5">
+            {order.customer_name || 'Customer Order'}
+          </h4>
+        </div>
+
+        {/* Unblurred High-Contrast QR Code */}
+        <div className="flex flex-col items-center justify-center p-4 bg-stone-50/80 rounded-2xl border border-stone-200/80 space-y-2">
+          <div className="p-3 bg-white rounded-2xl shadow-xs border border-stone-200/80">
+            <QRCodeSVG value={trackingUrl} size={160} level="M" includeMargin={false} />
+          </div>
+          <span className="text-xs font-bold text-stone-700">Scan at counter to collect</span>
+        </div>
+
+        {/* Unblurred, Crystal-Clear PIN Banner */}
+        {order.access_code && (
+          <div className="p-3.5 bg-amber-50/80 rounded-2xl border border-amber-200 text-center">
+            <span className="text-[10px] font-black uppercase tracking-widest text-amber-800 block">
+              4-Digit Collection PIN
+            </span>
+            <span className="text-3xl font-mono font-black text-stone-900 tracking-widest block mt-0.5">
+              {order.access_code}
+            </span>
+          </div>
+        )}
+
+        {/* Order Metrics Strip */}
+        <div className="grid grid-cols-3 gap-2 bg-stone-50/80 rounded-2xl p-3 border border-stone-100 text-center text-xs">
+          <div>
+            <span className="text-stone-400 text-[10px] block font-medium">Weight</span>
+            <span className="font-bold text-stone-900 mt-0.5 block">{formatWeight(order.weight_kg)}</span>
+          </div>
+          <div className="border-x border-stone-200">
+            <span className="text-stone-400 text-[10px] block font-medium">Rate</span>
+            <span className="font-bold text-stone-900 mt-0.5 block">
+              {currency} {Number(order.rate_per_kg).toFixed(0)}/kg
+            </span>
+          </div>
+          <div>
+            <span className="text-stone-400 text-[10px] block font-medium">Total</span>
+            <span className="font-black text-amber-700 mt-0.5 block">
+              {formatPrice(order.total_price, currency)}
+            </span>
+          </div>
+        </div>
+
+        {/* Footer Watermark */}
+        <div className="pt-2 text-center text-[10px] text-stone-400 border-t border-stone-100 flex items-center justify-between">
+          <span>{settings?.shop_name || 'Chakki Fresh'} • Live Tracking</span>
+          <span>{settings?.phone_number ? `Helpline: ${settings.phone_number}` : 'Stone Ground Flour'}</span>
+        </div>
+      </div>
+    </div>
+  </>
+);
 }
