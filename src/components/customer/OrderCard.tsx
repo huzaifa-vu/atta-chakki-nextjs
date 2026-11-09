@@ -482,15 +482,15 @@ export default function OrderCard({
             </div>
 
             {/* Save & Share Action Console (Excluded from captured image) */}
-            <div data-no-capture="true" className="pt-1 space-y-2">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div data-no-capture="true" className="pt-1">
+              <div className="flex items-center gap-2">
                 {/* Primary: Share Slip Image */}
                 <button
                   type="button"
                   onClick={handleShareCard}
                   disabled={isSharing || isSaving}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-xl font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-xs active:scale-98 cursor-pointer disabled:opacity-60 text-white bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
-                  title="Share pickup slip image with someone on WhatsApp or other apps"
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition shadow-xs active:scale-98 cursor-pointer disabled:opacity-60 text-white bg-amber-600 hover:bg-amber-700 shadow-amber-600/20"
+                  title="Share pickup slip image on WhatsApp or other apps"
                 >
                   {isSharing ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -500,26 +500,21 @@ export default function OrderCard({
                   <span>{isSharing ? 'Generating Slip...' : 'Share Slip Image'}</span>
                 </button>
 
-                {/* Secondary: Save Card as Image */}
+                {/* Secondary: Quick Download Slip Button */}
                 <button
                   type="button"
                   onClick={handleSaveCard}
                   disabled={isSharing || isSaving}
-                  className="w-full py-2.5 sm:py-3 px-4 rounded-xl bg-white hover:bg-stone-50 active:scale-98 text-stone-700 font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition border border-stone-200 shadow-2xs cursor-pointer disabled:opacity-60"
-                  title="Download card image to phone or computer gallery"
+                  className="py-3 px-3.5 rounded-xl bg-stone-100 hover:bg-stone-200 active:scale-98 text-stone-700 font-semibold transition border border-stone-200/80 shadow-2xs cursor-pointer disabled:opacity-60 shrink-0"
+                  title="Download slip image to device"
                 >
                   {isSaving ? (
                     <Loader2 className="w-4 h-4 animate-spin text-stone-600" />
                   ) : (
                     <Download className="w-4 h-4 text-stone-600" />
                   )}
-                  <span>{isSaving ? 'Saving...' : 'Save Card as Image'}</span>
                 </button>
               </div>
-
-              <p className="text-[11px] text-stone-500 text-center font-medium leading-relaxed">
-                Sending someone else to collect? Tap <strong className="text-stone-700 font-bold">Share Slip Image</strong> to send this card on WhatsApp.
-              </p>
 
               {/* In-Card Toast Feedback */}
               <AnimatePresence>
@@ -528,7 +523,7 @@ export default function OrderCard({
                     initial={{ opacity: 0, y: 6, scale: 0.96 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6, scale: 0.96 }}
-                    className="p-3 rounded-xl bg-stone-900 text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-lg"
+                    className="mt-2 p-3 rounded-xl bg-stone-900 text-white text-xs font-bold text-center flex items-center justify-center gap-2 shadow-lg"
                   >
                     <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                     <span>{feedbackToast}</span>
@@ -560,17 +555,6 @@ export default function OrderCard({
                 {formatPrice(order.total_price, currency)}
               </span>
             </div>
-          </div>
-        )}
-
-        {/* Official Slip Authenticity Watermark / Footer */}
-        {isReady && (
-          <div className="pt-2 text-center border-t border-stone-100 flex items-center justify-between text-[10px] text-stone-400 font-medium">
-            <span className="flex items-center gap-1">
-              <Wheat className="w-3 h-3 text-amber-500" />
-              {settings?.shop_name || 'Chakki Fresh'} Collection Slip
-            </span>
-            <span className="text-stone-400 font-medium">Ready for Counter Pickup</span>
           </div>
         )}
       </div>
