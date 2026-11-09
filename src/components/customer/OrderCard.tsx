@@ -138,7 +138,7 @@ export default function OrderCard({
       if (!blob) throw new Error('Could not render image');
 
       const file = new File([blob], fileName, { type: 'image/png' });
-      const shopTitle = settings?.shop_name || 'Chakki Fresh';
+      const shopTitle = settings?.shop_name || 'Chakki Waly';
       const shareTitle = `${shopTitle} - Flour Pickup Slip (PIN #${order.access_code})`;
       const shareText = `🌾 Flour Pickup Slip - ${shopTitle}\n` +
         `• Customer: ${order.customer_name || 'Whole Wheat Flour'}\n` +
@@ -584,7 +584,7 @@ export default function OrderCard({
             </div>
             <div>
               <h3 className="font-black text-sm text-stone-900 leading-tight">
-                {settings?.shop_name || 'Chakki Fresh'}
+                {settings?.shop_name || 'Chakki Waly'}
               </h3>
               <p className="text-[10px] text-stone-500 font-medium">Official Pickup Slip</p>
             </div>
@@ -646,7 +646,7 @@ export default function OrderCard({
 
         {/* Footer Watermark */}
         <div className="pt-2 text-center text-[10px] text-stone-400 border-t border-stone-100 flex items-center justify-between">
-          <span>{settings?.shop_name || 'Chakki Fresh'} • Live Tracking</span>
+          <span>{settings?.shop_name || 'Chakki Waly'} • Live Tracking</span>
           <span>{settings?.phone_number ? `Helpline: ${settings.phone_number}` : 'Stone Ground Flour'}</span>
         </div>
       </div>

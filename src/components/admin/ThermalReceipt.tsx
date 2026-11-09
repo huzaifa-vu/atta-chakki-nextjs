@@ -15,7 +15,7 @@ export default function ThermalReceipt({
   settings,
   trackingUrl,
 }: ThermalReceiptProps) {
-  const shopName = settings?.shop_name || 'Chakki Fresh';
+  const shopName = settings?.shop_name || 'Chakki Waly';
   const phone = settings?.phone_number || '';
   const currency = settings?.currency || 'Rs.';
 

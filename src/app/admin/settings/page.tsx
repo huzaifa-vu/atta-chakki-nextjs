@@ -41,7 +41,7 @@ const CACHE_KEY = 'chakki_cached_settings';
 export default function AdminSettingsPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<ShopSettings | null>(null);
-  const [shopName, setShopName] = useState('Chakki Fresh');
+  const [shopName, setShopName] = useState('Chakki Waly');
   const [ratePerKg, setRatePerKg] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [openingTime, setOpeningTime] = useState('08:00');
@@ -77,7 +77,7 @@ export default function AdminSettingsPage() {
         );
 
         setSettings(parsed);
-        setShopName(parsed.shop_name || 'Chakki Fresh');
+        setShopName(parsed.shop_name || 'Chakki Waly');
         setRatePerKg(parsed.rate_per_kg != null ? parsed.rate_per_kg.toString() : '');
         setPhoneNumber(parsed.phone_number || '');
         setOpeningTime(defaultOpen);
@@ -110,7 +110,7 @@ export default function AdminSettingsPage() {
         );
 
         setSettings(data as ShopSettings);
-        setShopName(data.shop_name || 'Chakki Fresh');
+        setShopName(data.shop_name || 'Chakki Waly');
         setRatePerKg(data.rate_per_kg != null ? data.rate_per_kg.toString() : '');
         setPhoneNumber(data.phone_number || '');
         setOpeningTime(defaultOpen);
@@ -200,7 +200,7 @@ export default function AdminSettingsPage() {
       );
 
       const updatedPayload = {
-        shop_name: shopName.trim() || 'Chakki Fresh',
+        shop_name: shopName.trim() || 'Chakki Waly',
         rate_per_kg: numRate,
         phone_number: phoneNumber.trim(),
         opening_time: defaultOpen,
@@ -617,7 +617,7 @@ export default function AdminSettingsPage() {
                     required
                     value={shopName}
                     onChange={(e) => setShopName(e.target.value)}
-                    placeholder="Chakki Fresh"
+                    placeholder="Chakki Waly"
                     className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 hover:bg-white focus:bg-white text-xs font-semibold text-stone-900 focus:border-amber-600 focus:outline-none transition"
                   />
                 </div>

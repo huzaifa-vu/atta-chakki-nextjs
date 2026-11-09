@@ -193,7 +193,7 @@ export default function CustomerDashboard() {
   };
 
   const currency = settings?.currency || 'Rs.';
-  const shopName = settings?.shop_name || 'Chakki Fresh';
+  const shopName = settings?.shop_name || 'Chakki Waly';
   const currentRate =
     settings?.rate_per_kg !== undefined && settings?.rate_per_kg !== null
       ? Number(settings.rate_per_kg)

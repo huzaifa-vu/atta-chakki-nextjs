@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chakki Fresh - Live Order Tracking",
+  title: "Chakki Waly - Live Order Tracking",
   description: "Fresh stone ground atta tracking for customers and shopkeepers.",
   icons: {
     icon: "/favicon.ico",

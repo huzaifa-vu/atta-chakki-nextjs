@@ -35,7 +35,7 @@ export default function TokenReceiptModal({
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
   const trackingUrl = `${origin}/?track=${order.id}`;
   const currency = settings?.currency || 'Rs.';
-  const shopName = settings?.shop_name || 'Chakki Fresh';
+  const shopName = settings?.shop_name || 'Chakki Waly';
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(trackingUrl);

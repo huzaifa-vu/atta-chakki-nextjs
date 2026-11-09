@@ -389,7 +389,7 @@ export default function AdminDashboardPage() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <h1 className="text-sm sm:text-lg font-black text-stone-900 tracking-tight leading-tight truncate">
-                  {settings?.shop_name || 'Chakki Fresh'}
+                  {settings?.shop_name || 'Chakki Waly'}
                 </h1>
                 <span className="text-[9px] sm:text-[10px] font-black uppercase bg-stone-900 text-white px-1.5 sm:px-2 py-0.5 rounded-md tracking-wider shrink-0 shadow-2xs">
                   Admin
