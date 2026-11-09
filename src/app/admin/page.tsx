@@ -264,6 +264,42 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const handleUpdateOrderRate = async (orderId: string, newRate: number, newTotal: number) => {
+    // Optimistically update orders in state
+    setOrders((prev) =>
+      prev.map((ord) =>
+        ord.id === orderId
+          ? {
+              ...ord,
+              rate_per_kg: newRate,
+              total_price: newTotal,
+              updated_at: new Date().toISOString(),
+            }
+          : ord
+      )
+    );
+
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          rate_per_kg: newRate,
+          total_price: newTotal,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', orderId);
+
+      if (error) throw error;
+
+      setToastMessage(`✓ Rate updated to Rs. ${newRate}/kg (Total: Rs. ${newTotal})`);
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (e) {
+      console.error('Failed to update rate', e);
+      fetchOrders();
+      alert('Failed to update rate');
+    }
+  };
+
   const handleDeleteOrder = async (orderId: string) => {
     if (!confirm('Are you sure you want to cancel and delete this order?')) return;
 
@@ -802,6 +838,7 @@ export default function AdminDashboardPage() {
                     onToggleSelect={handleToggleSelect}
                     onUpdateStatus={handleUpdateStatus}
                     onTogglePayment={handleTogglePayment}
+                    onUpdateRate={handleUpdateOrderRate}
                     onViewSlip={(ord) => {
                       setSelectedReceiptOrder(ord);
                       setIsReceiptModalOpen(true);

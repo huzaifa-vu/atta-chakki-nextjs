@@ -14,6 +14,8 @@ import {
   Loader2,
   DollarSign,
   AlertCircle,
+  Pencil,
+  RotateCcw,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -32,8 +34,13 @@ export default function NewOrderModal({
   settings,
   onOrderCreated,
 }: NewOrderModalProps) {
+  const defaultRate = Number(settings?.rate_per_kg || 0);
+  const currency = settings?.currency || 'Rs.';
+
   const [step, setStep] = useState<1 | 2>(1);
   const [weight, setWeight] = useState<string>('10');
+  const [isEditingRate, setIsEditingRate] = useState(false);
+  const [customRate, setCustomRate] = useState<string>('');
   const [customerName, setCustomerName] = useState<string>('');
   const [isPaid, setIsPaid] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
@@ -41,15 +48,19 @@ export default function NewOrderModal({
 
   const supabase = createClient();
 
-  const ratePerKg = Number(settings?.rate_per_kg || 0);
-  const currency = settings?.currency || 'Rs.';
+  const effectiveRate =
+    isEditingRate && customRate !== '' && !isNaN(parseFloat(customRate))
+      ? Math.max(0, parseFloat(customRate))
+      : defaultRate;
 
   const numWeight = parseFloat(weight) || 0;
-  const totalPrice = numWeight * ratePerKg;
+  const totalPrice = numWeight * effectiveRate;
 
   const resetForm = () => {
     setStep(1);
     setWeight('10');
+    setIsEditingRate(false);
+    setCustomRate('');
     setCustomerName('');
     setIsPaid(false);
     setError(null);
@@ -92,7 +103,7 @@ export default function NewOrderModal({
         .from('orders')
         .insert({
           weight_kg: numWeight,
-          rate_per_kg: ratePerKg,
+          rate_per_kg: effectiveRate,
           total_price: totalPrice,
           customer_name: customerName.trim() || null,
           status: 'queued',
@@ -193,19 +204,81 @@ export default function NewOrderModal({
                   </div>
                 </div>
 
-                {/* Live Calculated Price Summary */}
-                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 flex items-center justify-between">
-                  <div>
-                    <span className="block text-[11px] font-semibold text-amber-900/70">
-                      Rate: {currency} {ratePerKg.toFixed(0)} / kg
-                    </span>
-                    <span className="block text-xs font-medium text-stone-600">
-                      Calculated Total:
+                {/* Live Calculated Price Summary with Optional Rate Override */}
+                <div className="p-4 rounded-2xl bg-amber-50/70 border border-amber-200/60 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[11px] font-semibold text-amber-900/80">
+                          Rate: {currency} {effectiveRate.toFixed(0)} / kg
+                        </span>
+                        {isEditingRate && effectiveRate !== defaultRate && (
+                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-200/80 text-amber-900">
+                            Custom
+                          </span>
+                        )}
+                        {!isEditingRate && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsEditingRate(true);
+                              setCustomRate(defaultRate.toString());
+                            }}
+                            className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold text-amber-800 hover:text-amber-950 hover:bg-amber-200/70 transition cursor-pointer"
+                            title="Override rate for this order"
+                          >
+                            <Pencil className="w-2.5 h-2.5" />
+                            <span>Edit</span>
+                          </button>
+                        )}
+                      </div>
+                      <span className="block text-xs font-medium text-stone-600 mt-0.5">
+                        Calculated Total:
+                      </span>
+                    </div>
+                    <span className="text-2xl font-black text-amber-700">
+                      {formatPrice(totalPrice, currency)}
                     </span>
                   </div>
-                  <span className="text-2xl font-black text-amber-700">
-                    {formatPrice(totalPrice, currency)}
-                  </span>
+
+                  {/* Inline Rate Edit Field (revealed when Edit is clicked) */}
+                  {isEditingRate && (
+                    <div className="pt-2.5 border-t border-amber-200/60 space-y-2">
+                      <div className="flex items-center justify-between text-[11px] font-semibold text-stone-700">
+                        <span>Custom Rate for this order:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsEditingRate(false);
+                            setCustomRate('');
+                          }}
+                          className="inline-flex items-center gap-1 text-[10px] font-bold text-stone-500 hover:text-amber-800 transition cursor-pointer"
+                        >
+                          <RotateCcw className="w-2.5 h-2.5" />
+                          <span>Reset to default ({currency} {defaultRate.toFixed(0)})</span>
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-500">
+                          {currency}
+                        </span>
+                        <input
+                          type="number"
+                          step="1"
+                          min="0"
+                          max="10000"
+                          value={customRate}
+                          onChange={(e) => setCustomRate(e.target.value)}
+                          placeholder={defaultRate.toString()}
+                          autoFocus
+                          className="w-full pl-10 pr-14 py-2 text-sm font-bold text-stone-900 bg-white border border-amber-300 rounded-xl focus:border-amber-500 focus:outline-none transition shadow-2xs"
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-stone-400">
+                          / kg
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -270,14 +343,27 @@ export default function NewOrderModal({
                 </div>
 
                 {/* Quick Order Review */}
-                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs space-y-1">
-                  <div className="flex justify-between">
+                <div className="p-3.5 rounded-2xl bg-stone-50 border border-stone-200 text-xs space-y-1.5">
+                  <div className="flex justify-between items-center">
                     <span className="text-stone-500">Weight:</span>
                     <span className="font-bold text-stone-900">{numWeight} kg</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500">Total Due:</span>
-                    <span className="font-black text-amber-700">{formatPrice(totalPrice, currency)}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-stone-500">Rate:</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-stone-900">
+                        {currency} {effectiveRate.toFixed(0)} / kg
+                      </span>
+                      {effectiveRate !== defaultRate && (
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
+                          Custom
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-1 border-t border-stone-200/60">
+                    <span className="text-stone-600 font-medium">Total Due:</span>
+                    <span className="font-black text-amber-700 text-sm">{formatPrice(totalPrice, currency)}</span>
                   </div>
                 </div>
 

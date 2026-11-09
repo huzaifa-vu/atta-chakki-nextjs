@@ -15,6 +15,7 @@ import {
   ChevronRight,
   Copy,
   Banknote,
+  Pencil,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -26,6 +27,7 @@ interface AdminOrderCardProps {
   onToggleSelect?: (orderId: string) => void;
   onUpdateStatus: (orderId: string, nextStatus: OrderStatus) => void;
   onTogglePayment: (orderId: string, currentPaid: boolean) => void;
+  onUpdateRate?: (orderId: string, newRate: number, newTotal: number) => void;
   onViewSlip: (order: Order) => void;
   onDeleteOrder: (orderId: string) => void;
 }
@@ -38,6 +40,7 @@ export default function AdminOrderCard({
   onToggleSelect,
   onUpdateStatus,
   onTogglePayment,
+  onUpdateRate,
   onViewSlip,
   onDeleteOrder,
 }: AdminOrderCardProps) {
@@ -46,6 +49,8 @@ export default function AdminOrderCard({
   const isReady = order.status === 'ready';
   const isCompleted = order.status === 'completed';
   const [copiedPin, setCopiedPin] = useState(false);
+  const [isEditingRate, setIsEditingRate] = useState(false);
+  const [editRateVal, setEditRateVal] = useState<string>(Number(order.rate_per_kg || 0).toString());
 
   const handleCopyPin = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -261,13 +266,77 @@ export default function AdminOrderCard({
             </div>
             <div className="bg-stone-50 p-2 rounded-xl">
               <span className="text-stone-500 block text-[10px]">Rate</span>
-              <span className="font-bold text-stone-900">{currency} {Number(order.rate_per_kg).toFixed(0)}</span>
+              <div className="flex items-center justify-center gap-1">
+                <span className="font-bold text-stone-900">{currency} {Number(order.rate_per_kg).toFixed(0)}</span>
+                {onUpdateRate && !isEditingRate && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditRateVal(Number(order.rate_per_kg || 0).toString());
+                      setIsEditingRate(true);
+                    }}
+                    className="p-0.5 text-stone-400 hover:text-amber-700 transition cursor-pointer rounded"
+                    title="Override rate for this order"
+                  >
+                    <Pencil className="w-2.5 h-2.5" />
+                  </button>
+                )}
+              </div>
             </div>
             <div className="bg-amber-50/50 p-2 rounded-xl border border-amber-100">
               <span className="text-amber-800 block text-[10px]">Total</span>
               <span className="font-black text-amber-700">{formatPrice(order.total_price, currency)}</span>
             </div>
           </div>
+
+          {/* Inline Rate Edit Field (expands when edit pencil is clicked on active card) */}
+          {isEditingRate && (
+            <div className="mb-3 p-2.5 rounded-xl bg-amber-50/70 border border-amber-200/80 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-stone-700 text-[11px]">New Rate:</span>
+                <div className="relative">
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-stone-400">
+                    {currency}
+                  </span>
+                  <input
+                    type="number"
+                    step="1"
+                    min="0"
+                    value={editRateVal}
+                    onChange={(e) => setEditRateVal(e.target.value)}
+                    className="w-20 pl-7 pr-2 py-1 text-xs font-bold text-stone-900 bg-white border border-amber-300 rounded-lg focus:border-amber-500 focus:outline-none"
+                    autoFocus
+                  />
+                </div>
+                <span className="text-[11px] text-stone-500">
+                  Total: <strong className="text-amber-700 font-extrabold">{currency} {((parseFloat(editRateVal) || 0) * order.weight_kg).toFixed(0)}</strong>
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingRate(false)}
+                  className="px-2 py-1 rounded-lg text-[10px] font-semibold text-stone-600 hover:bg-stone-100 transition cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newRate = parseFloat(editRateVal);
+                    if (!isNaN(newRate) && newRate >= 0 && onUpdateRate) {
+                      const newTotal = newRate * order.weight_kg;
+                      onUpdateRate(order.id, newRate, newTotal);
+                      setIsEditingRate(false);
+                    }
+                  }}
+                  className="px-2.5 py-1 rounded-lg text-[10px] font-bold text-white bg-amber-600 hover:bg-amber-700 transition cursor-pointer active:scale-95 shadow-2xs"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Action Footer */}
           <div className="pt-2 flex flex-wrap items-center justify-between gap-2">
