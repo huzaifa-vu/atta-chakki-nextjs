@@ -30,6 +30,7 @@ import {
   Coffee,
   Check,
   Sparkles,
+  Wheat,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -276,10 +277,10 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] p-4 sm:p-6 overflow-x-hidden w-full">
-      <div className="max-w-xl mx-auto space-y-6">
-        {/* Navigation Bar */}
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-[#faf8f5] p-3.5 sm:p-6 overflow-x-hidden w-full">
+      <div className="max-w-lg mx-auto space-y-4 sm:space-y-5">
+        {/* Sleek Top Navigation Bar */}
+        <div className="flex items-center justify-between pt-1">
           <Link
             href="/admin"
             prefetch={true}
@@ -291,250 +292,295 @@ export default function AdminSettingsPage() {
                 window.location.href = '/admin';
               }
             }}
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-700 bg-white border border-stone-200 hover:border-amber-300 px-3 py-2 rounded-xl transition shadow-2xs cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-amber-700 bg-white border border-stone-200/80 hover:border-amber-300 px-3.5 py-1.5 rounded-full transition shadow-2xs cursor-pointer active:scale-95"
           >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Orders
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Orders</span>
           </Link>
+
           <div className="flex items-center gap-2">
             {isSyncing ? (
-              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+              <span className="text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200/80 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
                 Syncing...
               </span>
             ) : (
-              <span className="text-[10px] font-bold text-stone-500 bg-stone-100 px-2 py-0.5 rounded-md flex items-center gap-1">
+              <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-2xs">
                 <Check className="w-3 h-3 text-emerald-600" />
-                Synced
+                Saved & Live
               </span>
             )}
-            <span className="text-xs font-extrabold uppercase tracking-wider text-stone-600">
-              Shop Configuration
-            </span>
           </div>
         </div>
 
-        {/* Settings Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-stone-200 space-y-6"
-        >
-          {/* Card Header */}
-          <div className="flex items-center gap-3 pb-4 border-b border-stone-100">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200">
-              <Store className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-lg font-black text-stone-900">Chakki Settings & Hours</h2>
-              <p className="text-xs text-stone-600">
-                Manage operating hours, weekly prayer/lunch breaks, grinding rate, and shop info.
-              </p>
-            </div>
+        {/* Clean Header */}
+        <div className="flex items-center gap-3 pt-0.5">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 text-amber-700 flex items-center justify-center border border-amber-200/60 shadow-2xs shrink-0">
+            <Store className="w-5 h-5 text-amber-700" />
           </div>
+          <div>
+            <h1 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight leading-tight">
+              Shop Settings
+            </h1>
+            <p className="text-xs text-stone-500 font-medium">
+              Operating hours, milling rate, and shop contact
+            </p>
+          </div>
+        </div>
 
-          {feedback && (
-            <div
-              className={`p-3.5 rounded-2xl text-xs font-semibold flex items-center gap-2 border ${
-                feedback.type === 'success'
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-rose-50 text-rose-800 border-rose-200'
-              }`}
-            >
-              {feedback.type === 'success' ? (
-                <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
-              ) : (
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-              )}
-              <span>{feedback.message}</span>
-            </div>
-          )}
+        {feedback && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`p-3 rounded-2xl text-xs font-semibold flex items-center gap-2 border shadow-2xs ${
+              feedback.type === 'success'
+                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border-rose-200'
+            }`}
+          >
+            {feedback.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-600" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            )}
+            <span>{feedback.message}</span>
+          </motion.div>
+        )}
 
-          <form onSubmit={handleSave} className="space-y-6">
-            {/* SECTION 1: Operating Hours & Weekly Schedule */}
-            <div className="bg-gradient-to-br from-amber-50/80 via-white to-amber-50/40 p-5 rounded-2xl border border-amber-200/80 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-amber-700" />
-                  <span className="text-xs font-black text-stone-900 uppercase tracking-wider">
-                    Operating Schedule & Status
-                  </span>
+        {/* Modular, Soft Settings Cards */}
+        <form onSubmit={handleSave} className="space-y-4">
+          {/* CARD 1: Operating Hours & Status */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-2xs space-y-3.5"
+          >
+            {/* Header + Status Pill */}
+            <div className="flex items-center justify-between pb-1">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 border border-amber-200/50">
+                  <Clock className="w-4 h-4" />
                 </div>
-                {/* Live Status Pill Preview */}
+                <div>
+                  <h2 className="text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">
+                    Operating Schedule
+                  </h2>
+                </div>
+              </div>
+
+              {/* Status Pill */}
+              <span
+                className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1.5 ${
+                  currentPreviewStatus.isOpen
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                    : 'bg-stone-100 text-stone-600 border border-stone-200'
+                }`}
+              >
                 <span
-                  className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${
-                    currentPreviewStatus.isOpen
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      : 'bg-stone-200 text-stone-700 border border-stone-300'
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    currentPreviewStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-stone-400'
                   }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full ${
-                      currentPreviewStatus.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-stone-500'
-                    }`}
-                  />
-                  {currentPreviewStatus.isOpen
-                    ? 'Currently Open'
-                    : currentPreviewStatus.isBreakActive
-                    ? currentPreviewStatus.statusLabel
-                    : 'Currently Closed'}
-                </span>
-              </div>
-
-              {/* Clean Today's Summary + Modal Trigger Button */}
-              <div className="bg-white p-4 rounded-xl border border-stone-200/80 space-y-3 shadow-2xs">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <span className="text-[11px] font-extrabold uppercase text-stone-400 block tracking-wide">
-                      Today ({DAY_DISPLAY_NAMES[todayKey]})
-                    </span>
-                    <span className="text-sm font-black text-stone-900 block">
-                      {todaySchedule?.isOpen
-                        ? `${formatTime12Hour(todaySchedule.open)} – ${formatTime12Hour(todaySchedule.close)}`
-                        : 'Closed All Day'}
-                    </span>
-                  </div>
-
-                  {todayBreaks.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 justify-end">
-                      {todayBreaks.map((b, idx) => (
-                        <span
-                          key={b.id || idx}
-                          className="text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-lg flex items-center gap-1"
-                        >
-                          <Coffee className="w-3 h-3 text-amber-700" />
-                          {b.label || 'Break'}: {formatTime12Hour(b.start)} – {formatTime12Hour(b.end)}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Dedicated Clean Modal Trigger - Soft Light Redesign */}
-                <button
-                  type="button"
-                  onClick={() => setIsScheduleModalOpen(true)}
-                  className="w-full p-3.5 sm:p-4 rounded-2xl bg-amber-50/70 hover:bg-amber-100/80 border border-amber-200/80 text-amber-950 transition active:scale-[0.99] flex items-center justify-between group cursor-pointer shadow-2xs"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 border border-amber-200/60 flex items-center justify-center shrink-0 shadow-2xs">
-                      <CalendarDays className="w-4 h-4 text-amber-700" />
-                    </div>
-                    <div className="text-left">
-                      <span className="text-xs sm:text-sm font-extrabold text-stone-900 block leading-tight">
-                        Customize Every Day
-                      </span>
-                      <span className="text-[11px] text-stone-500 font-medium block mt-0.5">
-                        Set custom timings & prayer breaks for each day
-                      </span>
-                    </div>
-                  </div>
-                  <span className="text-xs font-bold text-amber-800 bg-white border border-amber-200/80 px-3 py-1.5 rounded-xl flex items-center gap-1.5 group-hover:bg-amber-50 transition shadow-2xs shrink-0">
-                    <span>Edit Days</span>
-                    <span className="group-hover:translate-x-0.5 transition-transform font-bold">→</span>
-                  </span>
-                </button>
-              </div>
-
-              {/* Default Hours (Synced with Weekly Mode) */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div>
-                  <label className="block text-[11px] font-bold text-stone-700 mb-1 flex items-center gap-1">
-                    <Sun className="w-3.5 h-3.5 text-amber-600" /> Default Open Time
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={openingTime}
-                    onChange={(e) => handleDefaultOpenChange(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:border-amber-600"
-                  />
-                  <span className="block text-[10px] text-stone-500 mt-0.5 font-medium">
-                    {formatTime12Hour(openingTime)} • Updates matching days
-                  </span>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-bold text-stone-700 mb-1 flex items-center gap-1">
-                    <Moon className="w-3.5 h-3.5 text-indigo-600" /> Default Close Time
-                  </label>
-                  <input
-                    type="time"
-                    required
-                    value={closingTime}
-                    onChange={(e) => handleDefaultCloseChange(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-stone-300 bg-white text-xs font-bold text-stone-900 focus:outline-none focus:border-amber-600"
-                  />
-                  <span className="block text-[10px] text-stone-500 mt-0.5 font-medium">
-                    {formatTime12Hour(closingTime)} • Updates matching days
-                  </span>
-                </div>
-              </div>
-
-              {/* Force Closed / Emergency Override Toggle */}
-              <div className="pt-3 border-t border-amber-200/60">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-xs font-bold text-stone-900 block">
-                      Emergency / Holiday Override
-                    </span>
-                    <span className="text-[11px] text-stone-500 block">
-                      Temporarily mark shop closed immediately (e.g. rain, maintenance)
-                    </span>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={isClosedOverride}
-                      onChange={(e) => setIsClosedOverride(e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600" />
-                  </label>
-                </div>
-
-                {isClosedOverride && (
-                  <div className="mt-2.5">
-                    <input
-                      type="text"
-                      value={closedReason}
-                      onChange={(e) => setClosedReason(e.target.value)}
-                      placeholder="Notice e.g. Closed for Maintenance until 4 PM"
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-rose-200 bg-rose-50 text-rose-900 placeholder-rose-400 focus:outline-none focus:border-rose-400"
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* SECTION 2: Price Per KG */}
-            <div className="bg-amber-50/60 p-4 rounded-2xl border border-amber-200/70 space-y-2">
-              <label className="block text-xs font-black text-amber-950 uppercase tracking-wider">
-                Grinding Price Per KG (Rs.)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-amber-700">
-                  Rs.
-                </span>
-                <input
-                  type="number"
-                  step="0.5"
-                  min="1"
-                  required
-                  value={ratePerKg}
-                  onChange={(e) => setRatePerKg(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border-2 border-amber-300 font-bold text-lg text-stone-900 focus:outline-none focus:border-amber-600 bg-white transition"
                 />
-              </div>
-              <p className="text-[11px] text-amber-900/70">
-                This rate applies automatically to all new incoming orders.
-              </p>
+                {currentPreviewStatus.isOpen
+                  ? 'Currently Open'
+                  : currentPreviewStatus.isBreakActive
+                  ? currentPreviewStatus.statusLabel
+                  : 'Currently Closed'}
+              </span>
             </div>
 
-            {/* SECTION 3: Shop Name & Phone */}
-            <div className="space-y-4">
+            {/* Today's Schedule Strip */}
+            <div className="bg-stone-50/80 rounded-xl p-3 border border-stone-100 flex items-center justify-between">
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5">
+                <span className="text-[10px] font-extrabold uppercase text-stone-400 block tracking-wider">
+                  Today ({DAY_DISPLAY_NAMES[todayKey]})
+                </span>
+                <span className="text-xs sm:text-sm font-black text-stone-800 block mt-0.5">
+                  {todaySchedule?.isOpen
+                    ? `${formatTime12Hour(todaySchedule.open)} – ${formatTime12Hour(todaySchedule.close)}`
+                    : 'Closed All Day'}
+                </span>
+              </div>
+
+              {todayBreaks.length > 0 && (
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {todayBreaks.map((b, idx) => (
+                    <span
+                      key={b.id || idx}
+                      className="text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200/60 px-2 py-0.5 rounded-md flex items-center gap-1"
+                    >
+                      <Coffee className="w-3 h-3 text-amber-600" />
+                      {b.label || 'Break'}: {formatTime12Hour(b.start)} – {formatTime12Hour(b.end)}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Edit Weekly Schedule Modal Trigger */}
+            <button
+              type="button"
+              onClick={() => setIsScheduleModalOpen(true)}
+              className="w-full p-2.5 sm:p-3 rounded-xl bg-amber-50/50 hover:bg-amber-100/60 border border-amber-200/70 text-amber-950 transition active:scale-[0.99] flex items-center justify-between group cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <CalendarDays className="w-4 h-4 text-amber-700 shrink-0" />
+                <div className="text-left">
+                  <span className="text-xs font-bold text-stone-900 block leading-tight">
+                    Weekly Hours & Prayer Breaks
+                  </span>
+                  <span className="text-[10px] text-stone-500 block">
+                    Set custom open/close & prayer breaks per day
+                  </span>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-amber-800 bg-white border border-amber-200/80 px-2.5 py-1 rounded-lg flex items-center gap-1 group-hover:bg-amber-50 shadow-2xs shrink-0">
+                <span>Edit</span>
+                <span className="group-hover:translate-x-0.5 transition-transform font-bold">→</span>
+              </span>
+            </button>
+
+            {/* Default Open & Close Hours */}
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-stone-700 flex items-center gap-1">
+                  <Sun className="w-3.5 h-3.5 text-amber-600" />
+                  Default Open
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={openingTime}
+                  onChange={(e) => handleDefaultOpenChange(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 hover:bg-white focus:bg-white text-xs font-bold text-stone-900 focus:outline-none focus:border-amber-600 transition"
+                />
+                <span className="text-[10px] text-stone-500 font-medium block">
+                  {formatTime12Hour(openingTime)}
+                </span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-stone-700 flex items-center gap-1">
+                  <Moon className="w-3.5 h-3.5 text-indigo-600" />
+                  Default Close
+                </label>
+                <input
+                  type="time"
+                  required
+                  value={closingTime}
+                  onChange={(e) => handleDefaultCloseChange(e.target.value)}
+                  className="w-full px-3 py-2 rounded-xl border border-stone-200 bg-stone-50/60 hover:bg-white focus:bg-white text-xs font-bold text-stone-900 focus:outline-none focus:border-amber-600 transition"
+                />
+                <span className="text-[10px] text-stone-500 font-medium block">
+                  {formatTime12Hour(closingTime)}
+                </span>
+              </div>
+            </div>
+
+            {/* Emergency / Holiday Override */}
+            <div className="pt-3 border-t border-stone-100 space-y-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs font-bold text-stone-900 block">
+                    Emergency Closure Override
+                  </span>
+                  <span className="text-[11px] text-stone-500 block">
+                    Temporarily mark shop closed immediately
+                  </span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0 ml-3">
+                  <input
+                    type="checkbox"
+                    checked={isClosedOverride}
+                    onChange={(e) => setIsClosedOverride(e.target.checked)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-stone-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-stone-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-500" />
+                </label>
+              </div>
+
+              {isClosedOverride && (
+                <div className="pt-1">
+                  <input
+                    type="text"
+                    value={closedReason}
+                    onChange={(e) => setClosedReason(e.target.value)}
+                    placeholder="Notice e.g. Closed for Maintenance until 4 PM"
+                    className="w-full px-3 py-2 text-xs rounded-xl border border-rose-200 bg-rose-50/80 text-rose-900 placeholder-rose-400 focus:outline-none focus:border-rose-400"
+                  />
+                </div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* CARD 2: Milling Rate */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-2xs space-y-3"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 border border-amber-200/50">
+                <Wheat className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">
+                  Milling Rate
+                </h2>
+                <p className="text-[11px] text-stone-500">
+                  Stone grinding rate charged per kilogram
+                </p>
+              </div>
+            </div>
+
+            <div className="relative flex items-center">
+              <span className="absolute left-3.5 text-xs font-bold text-amber-800 select-none">
+                Rs.
+              </span>
+              <input
+                type="number"
+                step="0.5"
+                min="1"
+                required
+                value={ratePerKg}
+                onChange={(e) => setRatePerKg(e.target.value)}
+                className="w-full pl-11 pr-14 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 hover:bg-white focus:bg-white text-base font-extrabold text-stone-900 focus:outline-none focus:border-amber-600 transition"
+                placeholder="150"
+              />
+              <span className="absolute right-3.5 text-xs font-semibold text-stone-400 select-none">
+                / kg
+              </span>
+            </div>
+            <p className="text-[10px] text-stone-500 font-medium">
+              Applied automatically when logging new bags at the counter.
+            </p>
+          </motion.div>
+
+          {/* CARD 3: Shop Information */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl p-4 sm:p-5 border border-stone-200/80 shadow-2xs space-y-3"
+          >
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 border border-amber-200/50">
+                <Store className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-xs sm:text-sm font-extrabold text-stone-900 leading-tight">
+                  Shop Information
+                </h2>
+                <p className="text-[11px] text-stone-500">
+                  Contact details shown to customers and printed on slips
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-stone-700 mb-1">
                   Shop Name
                 </label>
                 <div className="relative">
@@ -545,14 +591,14 @@ export default function AdminSettingsPage() {
                     value={shopName}
                     onChange={(e) => setShopName(e.target.value)}
                     placeholder="Chakki Fresh"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 text-sm font-medium focus:border-amber-500 focus:outline-none transition bg-stone-50/50"
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 hover:bg-white focus:bg-white text-xs font-semibold text-stone-900 focus:border-amber-600 focus:outline-none transition"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-stone-700 mb-1.5">
-                  Counter Phone Number
+                <label className="block text-[11px] font-bold text-stone-700 mb-1">
+                  Counter Helpline Number
                 </label>
                 <div className="relative">
                   <Phone className="w-4 h-4 text-stone-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -560,35 +606,36 @@ export default function AdminSettingsPage() {
                     type="tel"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="e.g. 0300 1234567"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-stone-200 text-sm font-medium focus:border-amber-500 focus:outline-none transition bg-stone-50/50"
+                    placeholder="0312-345-6789"
+                    className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-stone-200 bg-stone-50/60 hover:bg-white focus:bg-white text-xs font-semibold text-stone-900 focus:border-amber-600 focus:outline-none transition"
                   />
                 </div>
-                <p className="text-[11px] text-stone-500 mt-1">
-                  Printed on receipts and available to customers
+                <p className="text-[10px] text-stone-500 mt-1">
+                  Printed on token slips and tapped by customers for direct calling
                 </p>
               </div>
             </div>
+          </motion.div>
 
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full py-3.5 px-4 rounded-xl font-bold text-sm text-white bg-amber-600 hover:bg-amber-700 active:scale-[0.98] transition shadow-md shadow-amber-600/20 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  Save Shop Settings
-                </>
-              )}
-            </button>
-          </form>
-        </motion.div>
+          {/* Primary Save Action */}
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full py-3.5 px-4 rounded-2xl font-black text-sm text-white bg-amber-600 hover:bg-amber-700 active:scale-[0.99] transition shadow-md shadow-amber-600/20 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer mt-2"
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving Settings...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save Shop Settings
+              </>
+            )}
+          </button>
+        </form>
       </div>
 
       {/* Pop-up Weekly Schedule & Breaks Modal */}
